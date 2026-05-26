@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual de Uso — Suite ZipGrade</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;
+  --surface:#0d1117;
+  --surface2:#111827;
+  --surface3:#1a2235;
+  --deep:#040508;
+  --border:#1a2235;
+  --border2:#243044;
+  --border3:#2d3f5a;
+  --text:#e2e8f0;
+  --text2:#94a3b8;
+  --muted:#475569;
+
+  --c1:#38bdf8;  /* Separador */
+  --c2:#34d399;  /* CSV */
+  --c3:#a78bfa;  /* PDF */
+  --c4:#fbbf24;  /* Filtro */
+  --c5:#fb7185;  /* Analizador */
+  --c6:#34d399;  /* Directorio */
+  --c7:#4ade80;  /* ZipGrade App */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;overflow-x:hidden;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:4px}
+
+/* ── GRID TEXTURE ── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),
+    linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:32px 32px;opacity:.12;
+}
+
+/* ── HEADER ── */
+header{
+  background:var(--deep);border-bottom:1px solid var(--border);
+  padding:0 28px;height:56px;position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;gap:14px;
+}
+.brand-logo{
+  width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,var(--c1),var(--c3));
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.brand-logo svg{display:block;}
+.brand-text{font-size:13px;font-weight:700;letter-spacing:-.01em;}
+.brand-text span{color:var(--c1);}
+.header-badge{
+  font-size:10px;padding:3px 9px;border-radius:99px;
+  background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.25);
+  color:var(--c3);font-weight:600;letter-spacing:.04em;
+}
+.header-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:8px;font-family:'Sora',sans-serif;
+  font-size:12px;font-weight:600;border:1px solid transparent;
+  cursor:pointer;transition:all .15s;
+}
+.btn-ghost{background:transparent;border-color:var(--border2);color:var(--text2);}
+.btn-ghost:hover{background:var(--surface3);border-color:var(--border3);color:var(--text);}
+.btn-primary{background:var(--c3);color:#000;border-color:var(--c3);}
+.btn-primary:hover{background:#6ee7b7;}
+.btn:active{transform:scale(.97);}
+
+/* ── HERO ── */
+.hero{
+  position:relative;z-index:1;
+  padding:72px 28px 56px;text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  font-size:11px;color:var(--c3);font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;margin-bottom:20px;
+  padding:5px 14px;border-radius:99px;
+  background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);
+}
+.hero h1{
+  font-size:clamp(28px,5vw,48px);font-weight:800;
+  letter-spacing:-.03em;line-height:1.1;margin-bottom:16px;
+}
+.hero h1 em{font-style:normal;color:var(--c1);}
+.hero-sub{
+  font-size:15px;color:var(--text2);line-height:1.7;
+  max-width:560px;margin:0 auto 32px;
+}
+.hero-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn-hero{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 22px;border-radius:10px;font-family:'Sora',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;border:1px solid transparent;
+}
+.btn-hero-primary{background:var(--c3);color:#000;}
+.btn-hero-primary:hover{background:#6ee7b7;}
+.btn-hero-ghost{background:transparent;border-color:var(--border2);color:var(--text2);}
+.btn-hero-ghost:hover{background:var(--surface3);border-color:var(--border3);color:var(--text);}
+
+/* ── TOOL PILLS ── */
+.tool-pills{
+  display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:28px;
+}
+.tool-pill{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 13px;border-radius:99px;font-size:11px;font-weight:600;
+  border:1px solid;cursor:pointer;transition:all .15s;
+  text-decoration:none;
+}
+.tool-pill:hover{transform:translateY(-2px);}
+
+/* ── MAIN LAYOUT ── */
+.container{
+  position:relative;z-index:1;
+  max-width:1100px;margin:0 auto;padding:0 24px 80px;
+  display:grid;grid-template-columns:240px 1fr;gap:0;
+}
+
+/* ── STICKY NAV ── */
+.side-nav{
+  padding:32px 0;position:sticky;top:56px;height:calc(100vh - 56px);
+  overflow-y:auto;border-right:1px solid var(--border);
+}
+.nav-section{margin-bottom:20px;}
+.nav-section-label{
+  font-size:9px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.14em;font-weight:700;padding:0 16px;margin-bottom:6px;
+}
+.nav-link{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 16px;font-size:12px;color:var(--text2);
+  text-decoration:none;border-left:2px solid transparent;
+  transition:all .13s;cursor:pointer;
+}
+.nav-link:hover{color:var(--text);background:var(--surface2);}
+.nav-link.active{color:var(--c1);border-left-color:var(--c1);background:rgba(56,189,248,.05);}
+.nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* ── CONTENT AREA ── */
+.content{padding:32px 0 32px 48px;}
+
+/* ── SECTION ── */
+.manual-section{
+  margin-bottom:64px;scroll-margin-top:80px;
+}
+.section-header{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:24px;padding-bottom:14px;
+  border-bottom:1px solid var(--border2);
+}
+.section-icon{
+  width:44px;height:44px;border-radius:13px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.section-num{
+  font-family:'DM Mono',monospace;font-size:11px;
+  color:var(--muted);font-weight:500;
+}
+.section-title{font-size:22px;font-weight:700;letter-spacing:-.02em;}
+.section-desc{font-size:13px;color:var(--text2);line-height:1.65;margin-top:3px;}
+
+/* ── CONTENT BLOCKS ── */
+.block{margin-bottom:24px;}
+.block-title{
+  font-size:13px;font-weight:700;margin-bottom:10px;
+  display:flex;align-items:center;gap:7px;
+}
+.block-title::before{
+  content:'';display:inline-block;width:3px;height:14px;
+  border-radius:2px;background:var(--accent-c,var(--c1));
+}
+p{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:8px;}
+p strong{color:var(--text);font-weight:600;}
+
+/* ── STEPS ── */
+.steps{display:flex;flex-direction:column;gap:10px;margin-bottom:10px;}
+.step{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 14px;background:var(--surface);
+  border:1px solid var(--border2);border-radius:10px;
+}
+.step-n{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--accent-c,var(--c1));color:#000;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;
+}
+.step-body{flex:1;}
+.step-title{font-size:12px;font-weight:700;margin-bottom:3px;color:var(--text);}
+.step-desc{font-size:12px;color:var(--text2);line-height:1.6;}
+.step-code{
+  font-family:'DM Mono',monospace;font-size:11px;
+  background:var(--surface3);border:1px solid var(--border2);
+  border-radius:5px;padding:2px 7px;color:var(--accent-c,var(--c1));
+  display:inline-block;margin-top:4px;
+}
+
+/* ── ERROR CARDS ── */
+.errors{display:flex;flex-direction:column;gap:8px;}
+.error-card{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 14px;background:rgba(251,113,133,.06);
+  border:1px solid rgba(251,113,133,.2);border-radius:10px;
+}
+.error-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.error-body{flex:1;}
+.error-title{font-size:12px;font-weight:700;color:#fb7185;margin-bottom:3px;}
+.error-desc{font-size:12px;color:var(--text2);line-height:1.6;}
+.error-sol{
+  font-size:11px;color:#34d399;margin-top:5px;
+  display:flex;align-items:center;gap:5px;
+}
+.error-sol::before{content:'→';}
+
+/* ── TIP CARDS ── */
+.tips{display:flex;flex-direction:column;gap:8px;}
+.tip-card{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 14px;background:rgba(56,189,248,.06);
+  border:1px solid rgba(56,189,248,.15);border-radius:10px;
+}
+.tip-icon{font-size:15px;flex-shrink:0;}
+.tip-body{font-size:12px;color:var(--text2);line-height:1.6;}
+.tip-body strong{color:var(--c1);}
+
+/* ── INFO TABLE ── */
+.info-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;}
+.info-table th{
+  background:var(--surface2);color:var(--muted);
+  padding:8px 12px;text-align:left;font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--border2);
+  font-family:'DM Mono',monospace;
+}
+.info-table td{
+  padding:9px 12px;border-bottom:1px solid var(--border);
+  color:var(--text2);vertical-align:top;
+}
+.info-table td:first-child{color:var(--text);font-weight:500;}
+.info-table tr:last-child td{border-bottom:none;}
+.tw{border:1px solid var(--border2);border-radius:9px;overflow:hidden;margin-bottom:16px;}
+
+/* ── CODE BLOCK ── */
+.code-block{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:9px;padding:14px 16px;font-family:'DM Mono',monospace;
+  font-size:12px;color:var(--c1);line-height:1.7;margin-bottom:12px;
+  overflow-x:auto;
+}
+.code-block span{color:var(--text2);}
+
+/* ── WORKFLOW ── */
+.workflow{
+  display:flex;align-items:center;gap:0;
+  overflow-x:auto;padding:4px 0 12px;margin-bottom:8px;
+}
+.wf-step{
+  display:flex;align-items:center;gap:0;flex-shrink:0;
+}
+.wf-box{
+  padding:8px 14px;border-radius:8px;font-size:11px;font-weight:600;
+  border:1px solid;text-align:center;min-width:80px;
+}
+.wf-arrow{
+  font-size:11px;color:var(--muted);padding:0 6px;flex-shrink:0;
+}
+
+/* ── PDF MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);
+  z-index:200;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);
+}
+.modal-overlay.open{display:flex;}
+.modal-box{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:14px;padding:24px;width:min(560px,95vw);
+  max-height:92vh;overflow-y:auto;
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
+}
+.modal-box h2{font-size:16px;font-weight:700;margin-bottom:4px;}
+.modal-box p{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.modal-sections{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.ms-row{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border:1px solid var(--border2);
+  border-radius:8px;cursor:pointer;transition:all .13s;background:var(--surface2);
+}
+.ms-row:hover{border-color:var(--border3);}
+.ms-row.selected{border-color:var(--c3);background:rgba(52,211,153,.07);}
+.ms-check{
+  width:16px;height:16px;border-radius:4px;border:1px solid var(--border3);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-size:10px;background:transparent;transition:all .13s;
+}
+.ms-row.selected .ms-check{background:var(--c3);border-color:var(--c3);color:#000;}
+.ms-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ms-name{font-size:12px;font-weight:600;flex:1;}
+.ms-desc{font-size:11px;color:var(--muted);}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:14px;}
+.prog-wrap{background:var(--surface3);border-radius:5px;height:4px;overflow:hidden;margin-top:10px;display:none;}
+.prog-bar{height:100%;background:var(--c3);border-radius:5px;width:0;transition:width .25s;}
+.prog-msg{font-size:11px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace;}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:18px;right:18px;z-index:999;
+  background:var(--surface3);color:var(--text);
+  border:1px solid var(--border3);border-left:3px solid var(--c3);
+  border-radius:9px;padding:10px 16px;font-size:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+  opacity:0;transform:translateY(8px);transition:all .28s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* ── FADE IN ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.manual-section{animation:fadeUp .4s ease both;}
+.manual-section:nth-child(1){animation-delay:.05s}
+.manual-section:nth-child(2){animation-delay:.1s}
+.manual-section:nth-child(3){animation-delay:.15s}
+.manual-section:nth-child(4){animation-delay:.2s}
+.manual-section:nth-child(5){animation-delay:.25s}
+.manual-section:nth-child(6){animation-delay:.3s}
+.manual-section:nth-child(7){animation-delay:.35s}
+.manual-section:nth-child(8){animation-delay:.4s}
+
+@media(max-width:768px){
+  .container{grid-template-columns:1fr;}
+  .side-nav{display:none;}
+  .content{padding:24px 0;}
+  .hero{padding:40px 16px 32px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="brand-logo">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+  </div>
+  <span class="brand-text">Suite <span>ZipGrade</span></span>
+  <span class="header-badge">Manual de uso</span>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="window.location='index.html'">← Regresar al inicio</button>
+    <button class="btn btn-primary" onclick="openPDFModal()">
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M9 2v3h3M6 9h4M6 11h2"/></svg>
+      Exportar PDF
+    </button>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">
+    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 2v12M2 8h12"/></svg>
+    Documentación oficial
+  </div>
+  <h1>Manual de uso<br><em>Suite ZipGrade Profesional</em></h1>
+  <p class="hero-sub">Guía completa de todas las herramientas: flujo de trabajo, parámetros de entrada, mensajes de error y soluciones paso a paso.</p>
+  <div class="hero-actions">
+    <button class="btn-hero btn-hero-primary" onclick="openPDFModal()">📄 Exportar manual en PDF</button>
+    <button class="btn-hero btn-hero-ghost" onclick="document.getElementById('sec-0').scrollIntoView({behavior:'smooth'})">📖 Leer manual</button>
+  </div>
+  <div class="tool-pills">
+    <a class="tool-pill" style="background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:var(--c1)" href="#sec-1">📋 Separador</a>
+    <a class="tool-pill" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--c2)" href="#sec-2">📊 CSV</a>
+    <a class="tool-pill" style="background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.3);color:var(--c3)" href="#sec-3">📄 ZipGrade PDF</a>
+    <a class="tool-pill" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:var(--c4)" href="#sec-4">🔍 Filtro ID</a>
+    <a class="tool-pill" style="background:rgba(251,113,133,.1);border-color:rgba(251,113,133,.3);color:var(--c5)" href="#sec-5">📈 Analizador</a>
+    <a class="tool-pill" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--c6)" href="#sec-6">👥 Directorio</a>
+    <a class="tool-pill" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--c7)" href="#sec-7">📱 ZipGrade App</a>
+  </div>
+</div>
+
+<!-- CONTAINER -->
+<div class="container">
+
+  <!-- SIDE NAV -->
+  <nav class="side-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Introducción</div>
+      <a class="nav-link active" href="#sec-0" onclick="setActive(this)">🏠 Visión general</a>
+      <a class="nav-link" href="#sec-flujo" onclick="setActive(this)">🔄 Flujo de trabajo</a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Herramientas</div>
+      <a class="nav-link" href="#sec-1" onclick="setActive(this)">
+        <span class="nav-dot" style="background:var(--c1)"></span>Separador de nombres
+      </a>
+      <a class="nav-link" href="#sec-2" onclick="setActive(this)">
+        <span class="nav-dot" style="background:var(--c2)"></span>Generador CSV
+      </a>
+      <a class="nav-link" href="#sec-3" onclick="setActive(this)">
+        <span class="nav-dot" style="background:var(--c3)"></span>Generador ZipGrade PDF
+      </a>
+      <a class="nav-link" href="#sec-4" onclick="setActive(this)">
+        <span class="nav-dot" style="background:var(--c4)"></span>Filtro ZipGradeID
+      </a>
+      <a class="nav-link" href="#sec-5" onclick="setActive(this)">
+        <span class="nav-dot" style="background:var(--c5)"></span>Analizador de Exámenes
+      </a>
+      <a class="nav-link" href="#sec-6" onclick="setActive(this)">
+        <span class="nav-dot" style="background:var(--c6)"></span>Directorio de Alumnos
+      </a>
+      <a class="nav-link" href="#sec-7" onclick="setActive(this)">
+        <span class="nav-dot" style="background:var(--c7)"></span>ZipGrade App
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Referencia</div>
+      <a class="nav-link" href="#sec-errores" onclick="setActive(this)">⚠️ Errores comunes</a>
+      <a class="nav-link" href="#sec-formatos" onclick="setActive(this)">📋 Formatos de archivo</a>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- 0: VISIÓN GENERAL -->
+    <section class="manual-section" id="sec-0">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)">🏠</div>
+        <div>
+          <div class="section-num">00 — Introducción</div>
+          <div class="section-title">¿Qué es la Suite ZipGrade?</div>
+        </div>
+      </div>
+      <div class="block">
+        <p>La <strong>Suite ZipGrade Profesional</strong> es un conjunto de herramientas web diseñadas para docentes que utilizan la aplicación ZipGrade para calificar exámenes de opción múltiple. La suite cubre todo el ciclo de evaluación: desde preparar listas de alumnos hasta analizar resultados estadísticos en profundidad.</p>
+        <p>Todas las herramientas funcionan directamente en el navegador — no requieren instalación, registro ni conexión a internet una vez cargadas. Los datos <strong>nunca salen del dispositivo</strong>.</p>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c1)">Herramientas incluidas</div>
+        <div class="tw">
+          <table class="info-table">
+            <thead><tr><th>Herramienta</th><th>Función principal</th><th>Entrada</th><th>Salida</th></tr></thead>
+            <tbody>
+              <tr><td>📋 Separador de nombres</td><td>Divide nombre(s), primer y segundo apellido de listas en bruto</td><td>Lista de texto libre</td><td>CSV estructurado</td></tr>
+              <tr><td>📊 Generador CSV</td><td>Captura y edición de datos de alumnos en tabla</td><td>Manual o pegado desde Excel</td><td>CSV UTF-8 con BOM</td></tr>
+              <tr><td>📄 Generador ZipGrade PDF</td><td>Produce hojas de respuestas preimpresas con código de barras Code-128C</td><td>CSV de alumnos + imagen de fondo (opcional)</td><td>PDF carta multi-página</td></tr>
+              <tr><td>🔍 Filtro ZipGradeID</td><td>Filtra registros de ZipGrade por prefijo o sufijo del ID</td><td>CSV exportado de ZipGrade</td><td>CSV filtrado</td></tr>
+              <tr><td>📈 Analizador de Exámenes</td><td>Estadísticas completas, análisis por sección y reporte PDF</td><td>CSV(s) exportados de ZipGrade</td><td>Dashboard + CSV + PDF</td></tr>
+              <tr><td>👥 Directorio de Alumnos</td><td>Asocia nombres a IDs, perfil individual, comparativo grupal</td><td>CSV ZipGrade + CSV de directorio</td><td>Dashboard + CSV + PDF</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c2)">Requisitos técnicos</div>
+        <div class="tips">
+          <div class="tip-card"><div class="tip-icon">💻</div><div class="tip-body"><strong>Navegador moderno:</strong> Chrome 90+, Firefox 88+, Edge 90+ o Safari 14+. No compatible con Internet Explorer.</div></div>
+          <div class="tip-card"><div class="tip-icon">📐</div><div class="tip-body"><strong>Resolución mínima recomendada:</strong> 1280 × 720 px (tablet horizontal o PC). En pantallas menores aparecerá un aviso de compatibilidad.</div></div>
+          <div class="tip-card"><div class="tip-icon">📂</div><div class="tip-body"><strong>Archivos CSV:</strong> deben estar guardados en codificación <strong>UTF-8</strong> para preservar acentos y ñ. En Excel: Guardar como → CSV UTF-8 (con BOM).</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLUJO -->
+    <section class="manual-section" id="sec-flujo">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2)">🔄</div>
+        <div>
+          <div class="section-num">01 — Flujo de trabajo</div>
+          <div class="section-title">Ciclo completo de evaluación</div>
+        </div>
+      </div>
+      <div class="block">
+        <p>El flujo recomendado conecta las herramientas en secuencia. Cada herramienta produce el archivo que necesita la siguiente:</p>
+        <div class="workflow">
+          <div class="wf-step">
+            <div class="wf-box" style="background:rgba(56,189,248,.1);border-color:rgba(56,189,248,.3);color:var(--c1)">1. Separador<br><small style="font-weight:400;font-size:10px">nombres.txt</small></div>
+            <div class="wf-arrow">→</div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-box" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--c2)">2. Gen. CSV<br><small style="font-weight:400;font-size:10px">lista.csv</small></div>
+            <div class="wf-arrow">→</div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-box" style="background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.3);color:var(--c3)">3. Gen. PDF<br><small style="font-weight:400;font-size:10px">hojas.pdf</small></div>
+            <div class="wf-arrow">→</div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-box" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--c7)">4. ZipGrade<br><small style="font-weight:400;font-size:10px">escanear</small></div>
+            <div class="wf-arrow">→</div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-box" style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:var(--c4)">5. Filtro ID<br><small style="font-weight:400;font-size:10px">resultados.csv</small></div>
+            <div class="wf-arrow">→</div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-box" style="background:rgba(251,113,133,.1);border-color:rgba(251,113,133,.3);color:var(--c5)">6. Analizador<br><small style="font-weight:400;font-size:10px">estadísticas</small></div>
+            <div class="wf-arrow">→</div>
+          </div>
+          <div class="wf-step">
+            <div class="wf-box" style="background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:var(--c6)">7. Directorio<br><small style="font-weight:400;font-size:10px">perfiles PDF</small></div>
+          </div>
+        </div>
+        <p>Los pasos 1-3 se realizan <strong>antes del examen</strong>. Los pasos 4-7 se realizan <strong>después de escanear</strong> con ZipGrade. Los pasos 1-2 son opcionales si ya tienes el CSV de alumnos formateado.</p>
+      </div>
+    </section>
+
+    <!-- 1: SEPARADOR -->
+    <section class="manual-section" id="sec-1">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)">📋</div>
+        <div>
+          <div class="section-num">02 — Herramienta</div>
+          <div class="section-title">Separador de nombres y apellidos</div>
+          <div class="section-desc">Convierte listas de nombres en bruto en datos estructurados por columnas.</div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c1)">¿Qué hace?</div>
+        <p>Analiza cada nombre completo y lo divide automáticamente en <strong>Nombre(s)</strong>, <strong>1er Apellido</strong> y <strong>2do Apellido</strong>. Detecta preposiciones compuestas (De la Rosa, Del Ángel, Van der Berg) y las agrupa con el apellido correcto. Cada palabra se convierte en un bloque arrastrable para corrección manual.</p>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c1)">Pasos de uso</div>
+        <div class="steps">
+          <div class="step"><div class="step-n" style="background:var(--c1)">1</div><div class="step-body"><div class="step-title">Seleccionar orden de entrada</div><div class="step-desc">Elige si los nombres vienen en formato "Nombre → Apellido" (predeterminado), "Apellido → Nombre", o "Auto" para que la herramienta lo detecte.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c1)">2</div><div class="step-body"><div class="step-title">Pegar la lista</div><div class="step-desc">Pega desde Excel, Word o cualquier fuente. Un nombre por línea. También acepta tabuladores — solo toma la primera columna.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c1)">3</div><div class="step-body"><div class="step-title">Presionar "Procesar"</div><div class="step-desc">Cada nombre genera bloques de colores. Azul = Nombre(s), Verde = 1er Apellido, Violeta = 2do Apellido, Ámbar = Preposición (siempre va con el apellido a su derecha).</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c1)">4</div><div class="step-body"><div class="step-title">Revisar y corregir</div><div class="step-desc">Arrastra bloques entre columnas para reasignarlos. Haz clic en el texto de un bloque para editarlo. Usa el panel izquierdo para navegar entre registros. El indicador A/M/B muestra confianza alta, media o baja.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c1)">5</div><div class="step-body"><div class="step-title">Exportar CSV</div><div class="step-desc">El botón "Exportar CSV" descarga <span class="step-code">nombres_separados.csv</span> con columnas: Nombre(s), 1er Apellido, 2do Apellido, Original.</div></div></div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Errores y soluciones</div>
+        <div class="errors">
+          <div class="error-card"><div class="error-icon">⚠️</div><div class="error-body"><div class="error-title">"Sin registros aún" — no aparecen resultados</div><div class="error-desc">El área de texto está vacía o no se presionó "Procesar".</div><div class="error-sol">Pega al menos un nombre y presiona el botón Procesar (o Enter).</div></div></div>
+          <div class="error-card"><div class="error-icon">🔴</div><div class="error-body"><div class="error-title">Bloque con confianza "B" (baja)</div><div class="error-desc">El algoritmo no reconoció el nombre en su base de datos interna. Nombre muy inusual o extranjero.</div><div class="error-sol">Arrastra manualmente los bloques a las columnas correctas. Haz clic en el bloque para editar el texto.</div></div></div>
+          <div class="error-card"><div class="error-icon">🟡</div><div class="error-body"><div class="error-title">Preposición asignada a columna incorrecta</div><div class="error-desc">Ejemplo: "De la" quedó en Nombre en lugar de ir con el apellido.</div><div class="error-sol">Arrastra el bloque ámbar (PREP) a la columna del apellido que le corresponde.</div></div></div>
+          <div class="error-card"><div class="error-icon">📄</div><div class="error-body"><div class="error-title">El CSV exportado tiene caracteres extraños (â€™, ñ rota)</div><div class="error-desc">Excel abrió el CSV sin especificar la codificación UTF-8.</div><div class="error-sol">Abrir Excel → Datos → Desde texto/CSV → Origen de archivo: 65001 (UTF-8).</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2: GENERADOR CSV -->
+    <section class="manual-section" id="sec-2">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2)">📊</div>
+        <div>
+          <div class="section-num">03 — Herramienta</div>
+          <div class="section-title">Generador de CSV</div>
+          <div class="section-desc">Tabla de captura directa con importación inteligente desde Excel.</div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c2)">Columnas de la tabla</div>
+        <div class="tw">
+          <table class="info-table">
+            <thead><tr><th>Columna</th><th>Descripción</th><th>Formato</th><th>Ejemplo</th></tr></thead>
+            <tbody>
+              <tr><td>NOMBRES</td><td>Nombre(s) del alumno</td><td>Texto libre, acepta tildes y ñ</td><td>XIMENA SARAHÍ</td></tr>
+              <tr><td>PRIMER_APELLIDO</td><td>Apellido paterno</td><td>Texto libre</td><td>PADRÓN</td></tr>
+              <tr><td>SEGUNDO_APELLIDO</td><td>Apellido materno</td><td>Texto libre</td><td>ZÚÑIGA</td></tr>
+              <tr><td>ASIGNACION</td><td>Código numérico único del alumno (ZipGradeID)</td><td>Hasta 9 dígitos numéricos</td><td>004070109</td></tr>
+              <tr><td>GRUPO</td><td>Grupo o sección</td><td>Una letra o código corto</td><td>A / B / 3A</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c2)">Pasos de uso</div>
+        <div class="steps">
+          <div class="step"><div class="step-n" style="background:var(--c2)">1</div><div class="step-body"><div class="step-title">Captura manual</div><div class="step-desc">Haz clic en cualquier celda y escribe. <kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;font-size:10px">Tab</kbd> avanza columna, <kbd style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:1px 5px;font-size:10px">Enter</kbd> baja fila, flechas ↑↓ navegan.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c2)">2</div><div class="step-body"><div class="step-title">Pegar desde Excel (Ctrl+V)</div><div class="step-desc">Selecciona rangos en Excel y pégalos. Aparecerá un modal de configuración: elige el modo (agregar filas nuevas o rellenar desde el cursor), confirma el mapeo de columnas y presiona "Confirmar pegado".</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c2)">3</div><div class="step-body"><div class="step-title">Importar CSV existente</div><div class="step-desc">Botón "Importar CSV" para cargar un archivo previamente exportado o el resultado del Separador de nombres.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c2)">4</div><div class="step-body"><div class="step-title">Descargar CSV</div><div class="step-desc">Botón "Descargar CSV" genera <span class="step-code">Lista_captura.csv</span> listo para ser usado en el Generador ZipGrade PDF.</div></div></div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Errores y soluciones</div>
+        <div class="errors">
+          <div class="error-card"><div class="error-icon">📋</div><div class="error-body"><div class="error-title">Modal de pegado: columnas no mapeadas correctamente</div><div class="error-desc">El encabezado de Excel no coincide exactamente con los nombres esperados.</div><div class="error-sol">En el modal, usa los selectores desplegables de cada columna para asignar manualmente el destino correcto.</div></div></div>
+          <div class="error-card"><div class="error-icon">⚠️</div><div class="error-body"><div class="error-title">"No hay datos para exportar"</div><div class="error-desc">La tabla está vacía o todas las filas están en blanco.</div><div class="error-sol">Agrega al menos una fila con datos o importa un archivo CSV.</div></div></div>
+          <div class="error-card"><div class="error-icon">🔢</div><div class="error-body"><div class="error-title">ASIGNACION con letras o espacios</div><div class="error-desc">El campo acepta texto pero el Generador PDF solo usa los primeros 9 dígitos numéricos.</div><div class="error-sol">Usar solo dígitos en ASIGNACION (ej: 000404201). Los caracteres no numéricos se ignoran al generar el PDF.</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3: GENERADOR PDF -->
+    <section class="manual-section" id="sec-3">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2)">📄</div>
+        <div>
+          <div class="section-num">04 — Herramienta</div>
+          <div class="section-title">Generador ZipGrade PDF</div>
+          <div class="section-desc">Genera hojas de respuestas personalizadas con código de barras Code-128C.</div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c3)">¿Qué genera?</div>
+        <p>Produce un PDF de tamaño Carta con una página por alumno. Cada hoja contiene el <strong>nombre del alumno impreso</strong>, los <strong>dígitos de asignación marcados en la cuadrícula</strong>, la <strong>letra de grupo</strong>, y un <strong>código de barras Code-128C</strong> en la parte inferior que ZipGrade usa para identificar automáticamente al alumno al escanear.</p>
+        <p>Si se proporciona una imagen de fondo (la hoja preimpresa de ZipGrade), esta se coloca debajo de todos los elementos, alineada perfectamente a tamaño carta completo.</p>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c3)">Pasos de uso</div>
+        <div class="steps">
+          <div class="step"><div class="step-n" style="background:var(--c3)">1</div><div class="step-body"><div class="step-title">Cargar CSV de alumnos (paso ①)</div><div class="step-desc">Arrastra o selecciona el CSV exportado del Generador CSV. <strong>Columnas requeridas:</strong> NOMBRES, PRIMER_APELLIDO, SEGUNDO_APELLIDO, ASIGNACION, GRUPO.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c3)">2</div><div class="step-body"><div class="step-title">Cargar imagen de fondo (paso ②, opcional)</div><div class="step-desc">Arrastra la imagen de la hoja preimpresa de ZipGrade (PNG, JPG o WEBP). Las imágenes WEBP se convierten automáticamente a JPEG. La imagen se coloca al 100% de la hoja carta.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c3)">3</div><div class="step-body"><div class="step-title">Verificar vista previa (paso ③)</div><div class="step-desc">Revisa que el número de alumnos, grupos y páginas sea correcto antes de generar.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c3)">4</div><div class="step-body"><div class="step-title">Generar e imprimir / descargar (paso ④)</div><div class="step-desc">"Generar e Imprimir" abre el PDF en una nueva pestaña. "Descargar PDF" lo guarda como <span class="step-code">ZipGrade_N_alumnos.pdf</span>. Imprimir siempre al 100%, sin ajuste de márgenes, papel Carta.</div></div></div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Errores y soluciones</div>
+        <div class="errors">
+          <div class="error-card"><div class="error-icon">❌</div><div class="error-body"><div class="error-title">"Columnas faltantes: ASIGNACION, GRUPO…"</div><div class="error-desc">El CSV no tiene todos los encabezados requeridos o están escritos diferente (mayúsculas/minúsculas).</div><div class="error-sol">Verificar que la primera fila del CSV sea exactamente: NOMBRES, PRIMER_APELLIDO, SEGUNDO_APELLIDO, ASIGNACION, GRUPO (sin espacios, en mayúsculas).</div></div></div>
+          <div class="error-card"><div class="error-icon">🖨️</div><div class="error-body"><div class="error-title">Las marcas no coinciden con los óvalos de la hoja preimpresa</div><div class="error-desc">La hoja se imprimió con escala distinta al 100% o con márgenes ajustados automáticamente.</div><div class="error-sol">Al imprimir: escala = 100%, sin "Ajustar a página", sin márgenes automáticos, papel = Carta (Letter).</div></div></div>
+          <div class="error-card"><div class="error-icon">🔲</div><div class="error-body"><div class="error-title">El código de barras no es leído por ZipGrade</div><div class="error-desc">La ASIGNACION tiene menos de 9 dígitos o contiene letras.</div><div class="error-sol">Usar exactamente 9 dígitos numéricos en el campo ASIGNACION. El sistema rellena con ceros a la izquierda si faltan.</div></div></div>
+          <div class="error-card"><div class="error-icon">🖼️</div><div class="error-body"><div class="error-title">La imagen de fondo aparece distorsionada</div><div class="error-desc">La imagen no tiene proporciones de hoja carta (1:1.29 aprox.).</div><div class="error-sol">Escanear la hoja a 300 DPI en tamaño carta. Resolución recomendada: 2550 × 3300 px.</div></div></div>
+          <div class="error-card"><div class="error-icon">⏳</div><div class="error-body"><div class="error-title">La generación tarda mucho o el navegador se congela</div><div class="error-desc">Más de 200 alumnos con imagen de fondo de alta resolución.</div><div class="error-sol">Reducir la resolución de la imagen a 150 DPI (1275 × 1650 px) o generar en lotes de 100 alumnos.</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4: FILTRO ID -->
+    <section class="manual-section" id="sec-4">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2)">🔍</div>
+        <div>
+          <div class="section-num">05 — Herramienta</div>
+          <div class="section-title">Filtro ZipGradeID</div>
+          <div class="section-desc">Extrae subconjuntos de alumnos de los resultados de ZipGrade por código.</div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c4)">¿Para qué sirve?</div>
+        <p>ZipGrade exporta <strong>todos</strong> los alumnos en un solo archivo. Si un maestro tiene varios grupos y usó un prefijo diferente en el ZipGradeID para cada uno (ej: 402 para grupo A, 403 para grupo B), este filtro separa los resultados por grupo en segundos.</p>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c4)">Pasos de uso</div>
+        <div class="steps">
+          <div class="step"><div class="step-n" style="background:var(--c4)">1</div><div class="step-body"><div class="step-title">Cargar CSV de ZipGrade</div><div class="step-desc">Arrastra el archivo exportado de ZipGrade. La herramienta detecta automáticamente la columna ZipGradeID.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c4)">2</div><div class="step-body"><div class="step-title">Seleccionar modo de filtro</div><div class="step-desc"><strong>Empieza con:</strong> filtra por prefijo (los primeros dígitos del ID). <strong>Termina con:</strong> filtra por sufijo (últimos dígitos). <strong>Ambos:</strong> aplica prefijo Y sufijo simultáneamente.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c4)">3</div><div class="step-body"><div class="step-title">Ingresar prefijo / sufijo</div><div class="step-desc">Escribe los dígitos por los que filtrar. Ejemplo: prefijo "402" obtiene todos los IDs que comiencen con 402.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c4)">4</div><div class="step-body"><div class="step-title">Revisar vista previa y exportar</div><div class="step-desc">Muestra un máximo de 200 filas en pantalla. El CSV exportado incluye <strong>todas</strong> las filas filtradas y <strong>todos</strong> los encabezados originales del archivo de ZipGrade. El nombre del archivo incluye el filtro aplicado.</div></div></div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Errores y soluciones</div>
+        <div class="errors">
+          <div class="error-card"><div class="error-icon">❌</div><div class="error-body"><div class="error-title">"No se encontró la columna ZipGradeID"</div><div class="error-desc">El CSV no fue exportado por ZipGrade o tiene un encabezado diferente.</div><div class="error-sol">Verificar que el archivo tenga una columna llamada exactamente "ZipGradeID" (respeta mayúsculas). Solo los exports de ZipGrade tienen este campo.</div></div></div>
+          <div class="error-card"><div class="error-icon">0️⃣</div><div class="error-body"><div class="error-title">"0 registros" con un filtro aparentemente correcto</div><div class="error-desc">El prefijo o sufijo no coincide con ningún ID del archivo.</div><div class="error-sol">Revisar un ID real en la vista previa de la tabla para confirmar exactamente qué dígitos usar como filtro.</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5: ANALIZADOR -->
+    <section class="manual-section" id="sec-5">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.2)">📈</div>
+        <div>
+          <div class="section-num">06 — Herramienta</div>
+          <div class="section-title">Analizador de Exámenes</div>
+          <div class="section-desc">Estadísticas completas del grupo con análisis por sección y reporte PDF profesional.</div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Vistas disponibles</div>
+        <div class="tw">
+          <table class="info-table">
+            <thead><tr><th>Pestaña</th><th>Contenido</th></tr></thead>
+            <tbody>
+              <tr><td>📋 Alumnos</td><td>Tabla ordenable con barra de % por alumno. Botón "Ver" muestra la cuadrícula completa de respuestas (verde = correcto, rojo = incorrecto).</td></tr>
+              <tr><td>📚 Secciones</td><td>Tabla con el porcentaje de cada alumno desglosado por materia (requiere configurar secciones primero).</td></tr>
+              <tr><td>📊 Gráficas</td><td>Distribución de calificaciones por decil, alumnos por rango (Excelente/Bueno/Suficiente/Deficiente/Insuficiente) y promedio por sección.</td></tr>
+              <tr><td>🔬 Reactivos</td><td>Mini-tarjeta por reactivo mostrando el % de aciertos del grupo. Identifica reactivos problemáticos.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Configuración de secciones</div>
+        <div class="steps">
+          <div class="step"><div class="step-n" style="background:var(--c5)">1</div><div class="step-body"><div class="step-title">Abrir panel "Secciones del examen" en la barra lateral</div><div class="step-desc">Clic en "+ Agregar sección". Asigna nombre de materia, reactivo inicial y reactivo final (ej: Matemáticas P1-P20).</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c5)">2</div><div class="step-body"><div class="step-title">Agregar todas las materias</div><div class="step-desc">Las secciones no deben traslaparse y deben cubrir todos los reactivos del examen. El sistema calcula el porcentaje de cada sección de forma independiente.</div></div></div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Exclusión de reactivos</div>
+        <p>Si un reactivo tiene un error de redacción o la clave es inválida, puede excluirse del cálculo: escribe el número de reactivo en "Reactivos excluidos" y confirma con un motivo. El reactivo aparecerá con borde punteado y no afectará calificaciones ni reportes.</p>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Reporte PDF</div>
+        <p>El botón "Reporte PDF" abre un modal con tres tipos: <strong>General del grupo</strong> (estadísticas, tabla, distribución, reactivos), <strong>Individual</strong> (un alumno específico), o <strong>General + Individual</strong> (todos). Se puede seleccionar qué secciones incluir en el reporte.</p>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Errores y soluciones</div>
+        <div class="errors">
+          <div class="error-card"><div class="error-icon">📁</div><div class="error-body"><div class="error-title">No aparecen datos al cargar el CSV</div><div class="error-desc">El archivo no es un export válido de ZipGrade o tiene filas duplicadas.</div><div class="error-sol">El analizador elimina automáticamente ZipGradeIDs duplicados, conservando el primero. Verificar que el archivo tenga la columna ZipGradeID, EarnedPts, PossiblePts y las columnas Stu1…StuN.</div></div></div>
+          <div class="error-card"><div class="error-icon">📊</div><div class="error-body"><div class="error-title">Los porcentajes no coinciden con los de ZipGrade</div><div class="error-desc">Hay reactivos excluidos activos o el filtro de rango % está aplicado.</div><div class="error-sol">Verificar panel "Reactivos excluidos" (deben estar en cero si no se usaron) y limpiar los filtros de la barra lateral.</div></div></div>
+          <div class="error-card"><div class="error-icon">📄</div><div class="error-body"><div class="error-title">El PDF se genera pero está vacío o corrupto</div><div class="error-desc">El navegador bloqueó las ventanas emergentes o la librería jsPDF no cargó.</div><div class="error-sol">Permitir ventanas emergentes para este sitio. Verificar conexión a internet (jsPDF se carga desde CDN la primera vez).</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6: DIRECTORIO -->
+    <section class="manual-section" id="sec-6">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2)">👥</div>
+        <div>
+          <div class="section-num">07 — Herramienta</div>
+          <div class="section-title">Directorio de Alumnos</div>
+          <div class="section-desc">Vincula nombres a IDs y genera reportes individuales completos.</div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c6)">Diferencia con el Analizador</div>
+        <p>Mientras el Analizador trabaja con IDs anónimos, el Directorio <strong>asocia nombres reales</strong> a cada ZipGradeID. Esto permite reportes individuales con el nombre del alumno, análisis por grupo/turno y comparativos personalizados.</p>
+        <p>El directorio se <strong>guarda automáticamente en el navegador</strong> (localStorage) y persiste entre sesiones en el mismo dispositivo.</p>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c6)">Pasos de uso</div>
+        <div class="steps">
+          <div class="step"><div class="step-n" style="background:var(--c6)">1</div><div class="step-body"><div class="step-title">Cargar CSV de ZipGrade (📂 Cargar CSV)</div><div class="step-desc">El sistema extrae automáticamente los campos FirstName/LastName del export de ZipGrade si están disponibles y los agrega al directorio.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c6)">2</div><div class="step-body"><div class="step-title">Completar directorio (👥 Directorio)</div><div class="step-desc">Importa un CSV de directorio (columnas: ZipGradeID, Nombre, Apellido, Grupo, Turno, Nota) o agrega alumnos manualmente.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c6)">3</div><div class="step-body"><div class="step-title">Configurar Patrón ID (⚙ Patrón ID)</div><div class="step-desc">Define cómo se segmentan los dígitos del ZipGradeID (Escuela, Ciclo, Grupo, Folio). Esto activa el decodificador visual en la barra lateral.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c6)">4</div><div class="step-body"><div class="step-title">Configurar secciones (📚 Secciones)</div><div class="step-desc">Igual que en el Analizador: define rango de reactivos por materia para ver desglose por alumno.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c6)">5</div><div class="step-body"><div class="step-title">Seleccionar alumno</div><div class="step-desc">La pestaña "Perfil Individual" muestra: calificación global, posición en el grupo, desempeño por sección, cuadrícula de respuestas, análisis de errores y comparativo grupal. Tres sub-pestañas: Respuestas / Errores / Comparativo.</div></div></div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c5)">Errores y soluciones</div>
+        <div class="errors">
+          <div class="error-card"><div class="error-icon">💾</div><div class="error-body"><div class="error-title">El directorio se pierde al cambiar de dispositivo</div><div class="error-desc">El directorio usa localStorage del navegador, que es local a cada dispositivo y navegador.</div><div class="error-sol">Exportar el directorio como CSV desde el modal 👥 Directorio → guardar en Drive/USB → reimportar en el otro dispositivo.</div></div></div>
+          <div class="error-card"><div class="error-icon">👤</div><div class="error-body"><div class="error-title">Alumno sin nombre en la lista (aparece "sin nombre")</div><div class="error-desc">El ZipGradeID del alumno no está en el directorio.</div><div class="error-sol">Abrir 👥 Directorio → agregar manualmente el ID y nombre, o importar el CSV de directorio que incluya ese ID.</div></div></div>
+          <div class="error-card"><div class="error-icon">🔢</div><div class="error-body"><div class="error-title">El decodificador muestra segmentos incorrectos</div><div class="error-desc">El patrón de segmentos no coincide con la estructura real del ZipGradeID de la escuela.</div><div class="error-sol">Abrir ⚙ Patrón ID → ajustar las longitudes de cada segmento según la estructura del ID. Ejemplo: 3 dígitos de escuela + 2 de ciclo + 4 de folio.</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7: ZIPGRADE APP -->
+    <section class="manual-section" id="sec-7">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2)">📱</div>
+        <div>
+          <div class="section-num">08 — Aplicación complementaria</div>
+          <div class="section-title">ZipGrade — App de captura</div>
+          <div class="section-desc">La app móvil que escanea las hojas de respuestas en campo.</div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c7)">Relación con la suite</div>
+        <p>ZipGrade es una aplicación <strong>externa</strong>, desarrollada por ZipGrade LLC. La suite web no reemplaza a ZipGrade — es complementaria. ZipGrade se usa en el <strong>teléfono o tablet</strong> para escanear las hojas de respuestas durante o después del examen. Los archivos CSV que genera ZipGrade son exactamente los que necesitan el Filtro, el Analizador y el Directorio.</p>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c7)">Descargas</div>
+        <div class="tips">
+          <div class="tip-card"><div class="tip-icon">🍎</div><div class="tip-body"><strong>iOS (iPhone / iPad):</strong> disponible en App Store. Requiere iOS 13 o superior. URL: <strong>zipgrade.com/get</strong></div></div>
+          <div class="tip-card"><div class="tip-icon">🤖</div><div class="tip-body"><strong>Android:</strong> disponible en Google Play. Requiere Android 6 o superior. URL: <strong>zipgrade.com/getAndroid</strong></div></div>
+          <div class="tip-card"><div class="tip-icon">🌐</div><div class="tip-body"><strong>Documentación oficial:</strong> <strong>zipgrade.com</strong> — tutoriales, tipos de cuenta y soporte técnico de ZipGrade.</div></div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c7)">Flujo de exportación desde ZipGrade</div>
+        <div class="steps">
+          <div class="step"><div class="step-n" style="background:var(--c7)">1</div><div class="step-body"><div class="step-title">En ZipGrade: abrir el quiz calificado</div><div class="step-desc">Ir a la lista de quizzes → seleccionar el examen terminado.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c7)">2</div><div class="step-body"><div class="step-title">Exportar resultados</div><div class="step-desc">Menú → Export → "Export to CSV". Seleccionar "Detailed Report" (incluye columnas Stu1…StuN con respuestas individuales).</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c7)">3</div><div class="step-body"><div class="step-title">Enviar el CSV al PC</div><div class="step-desc">Via correo, Drive, AirDrop o cable USB. Guardar el archivo sin modificarlo para preservar la codificación.</div></div></div>
+          <div class="step"><div class="step-n" style="background:var(--c7)">4</div><div class="step-body"><div class="step-title">Cargar en la suite</div><div class="step-desc">Usar el Filtro ZipGradeID para separar por grupo si aplica, luego cargar en el Analizador o Directorio.</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ERRORES COMUNES -->
+    <section class="manual-section" id="sec-errores">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.2)">⚠️</div>
+        <div>
+          <div class="section-num">09 — Referencia</div>
+          <div class="section-title">Errores comunes de toda la suite</div>
+          <div class="section-desc">Problemas que pueden ocurrir en cualquier herramienta.</div>
+        </div>
+      </div>
+      <div class="errors">
+        <div class="error-card"><div class="error-icon">🌐</div><div class="error-body"><div class="error-title">La herramienta no carga o se ve en blanco</div><div class="error-desc">El script de jsPDF no se descargó desde el CDN, o hay un bloqueador de contenido activo.</div><div class="error-sol">Desactivar ad-blockers para este sitio. Recargar con Ctrl+Shift+R (caché limpio). Verificar conexión a internet.</div></div></div>
+        <div class="error-card"><div class="error-icon">📵</div><div class="error-body"><div class="error-title">En móvil: aparece aviso "optimizado para tablet o PC"</div><div class="error-desc">La pantalla es menor a 768px de ancho.</div><div class="error-sol">Usar desde un PC o tablet. En el teléfono, el botón "Continuar de todas formas" permite acceder, pero la experiencia será limitada. Usar ZipGrade App para capturar exámenes en el teléfono.</div></div></div>
+        <div class="error-card"><div class="error-icon">🔤</div><div class="error-body"><div class="error-title">Caracteres especiales (á, é, ñ) aparecen rotos en el CSV</div><div class="error-desc">El archivo se guardó en encoding ANSI/Latin-1 en lugar de UTF-8.</div><div class="error-sol">En Excel al guardar: Archivo → Guardar como → tipo "CSV UTF-8 (delimitado por comas)". En Google Sheets: Archivo → Descargar → CSV (automáticamente UTF-8).</div></div></div>
+        <div class="error-card"><div class="error-icon">🔒</div><div class="error-body"><div class="error-title">El PDF no descarga / el botón no responde</div><div class="error-desc">El navegador bloqueó la descarga automática o pop-ups.</div><div class="error-sol">Revisar la barra de notificaciones del navegador — puede mostrar "Descarga bloqueada". Hacer clic en "Permitir". También revisar configuración de descargas del navegador.</div></div></div>
+        <div class="error-card"><div class="error-icon">🗄️</div><div class="error-body"><div class="error-title">Los datos del directorio desaparecieron</div><div class="error-desc">Se limpió el caché/datos del navegador o se usó modo incógnito.</div><div class="error-sol">Siempre exportar el directorio como CSV de respaldo después de actualizarlo. El modo incógnito no persiste localStorage al cerrar la ventana.</div></div></div>
+      </div>
+    </section>
+
+    <!-- FORMATOS -->
+    <section class="manual-section" id="sec-formatos">
+      <div class="section-header">
+        <div class="section-icon" style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.2)">📋</div>
+        <div>
+          <div class="section-num">10 — Referencia</div>
+          <div class="section-title">Formatos de archivos</div>
+          <div class="section-desc">Estructura exacta de cada tipo de archivo utilizado en la suite.</div>
+        </div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c2)">CSV de alumnos (entrada para Generador PDF)</div>
+        <div class="code-block">NOMBRES,PRIMER_APELLIDO,SEGUNDO_APELLIDO,ASIGNACION,GRUPO<br>
+<span>JUAN CARLOS,GARCÍA,LÓPEZ,000404201,A</span><br>
+<span>SOFÍA,HERNÁNDEZ,DE LA ROSA,000404202,A</span><br>
+<span>XIMENA SARAHÍ,PADRÓN,ZÚÑIGA,000404203,B</span></div>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c7)">CSV export de ZipGrade (entrada para Filtro/Analizador/Directorio)</div>
+        <div class="code-block">ZipGradeID,EarnedPts,PossiblePts,PercentCorrect,KeyVersion,Stu1,Key1,EarnedPt1,Stu2,Key2,EarnedPt2…<br>
+<span>000404201,18,20,90.0,A,A,A,1,B,C,0,C,C,1…</span><br>
+<span>000404202,15,20,75.0,A,A,A,1,A,C,0…</span></div>
+        <p>Los campos <strong>Stu1…StuN</strong> contienen la respuesta del alumno para cada reactivo. <strong>Key1…KeyN</strong> es la clave correcta. <strong>EarnedPt1…EarnedPtN</strong> es 1 si acertó, 0 si no.</p>
+      </div>
+      <div class="block">
+        <div class="block-title" style="--accent-c:var(--c6)">CSV de directorio (entrada para Directorio)</div>
+        <div class="code-block">ZipGradeID,Nombre,Apellido,Grupo,Turno,Nota<br>
+<span>000404201,Juan Carlos,García López,3A,Matutino,</span><br>
+<span>000404202,Sofía,Hernández De la Rosa,3A,Matutino,NEE</span></div>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /container -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- PDF MODAL -->
+<div class="modal-overlay" id="pdfModal">
+  <div class="modal-box">
+    <h2>📄 Exportar Manual en PDF</h2>
+    <p>Selecciona las secciones que deseas incluir en el documento PDF.</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-ghost" style="font-size:10px;padding:4px 10px" onclick="selAll(true)">Seleccionar todo</button>
+      <button class="btn btn-ghost" style="font-size:10px;padding:4px 10px" onclick="selAll(false)">Ninguno</button>
+    </div>
+    <div class="modal-sections" id="modalSections"></div>
+    <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+    <div class="prog-msg" id="progMsg"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closePDFModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btnGenPDF" onclick="generatePDF()">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M9 2v3h3M6 9h4M6 11h2"/></svg>
+        Generar PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════ NAV ACTIVE ══════════════════════
+function setActive(el){
+  document.querySelectorAll('.nav-link').forEach(function(l){l.classList.remove('active');});
+  el.classList.add('active');
+}
+
+// Intersection Observer para actualizar nav automáticamente
+var sections = document.querySelectorAll('.manual-section');
+var observer = new IntersectionObserver(function(entries){
+  entries.forEach(function(entry){
+    if(entry.isIntersecting){
+      var id = entry.target.id;
+      document.querySelectorAll('.nav-link').forEach(function(l){
+        l.classList.toggle('active', l.getAttribute('href')==='#'+id);
+      });
+    }
+  });
+},{rootMargin:'-30% 0px -60% 0px'});
+sections.forEach(function(s){observer.observe(s);});
+
+// ══════════════════════ TOAST ══════════════════════
+function showToast(msg){
+  var t=document.getElementById('toast');t.textContent=msg;
+  t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+// ══════════════════════ PDF MODAL DATA ══════════════════════
+var SECTIONS = [
+  {id:'s0',  label:'🏠 Visión general',              dot:'#38bdf8', desc:'Qué es la suite, herramientas incluidas y requisitos'},
+  {id:'sf',  label:'🔄 Flujo de trabajo',             dot:'#34d399', desc:'Ciclo completo de evaluación paso a paso'},
+  {id:'s1',  label:'📋 Separador de nombres',         dot:'#38bdf8', desc:'Uso, bloques arrastrables, errores comunes'},
+  {id:'s2',  label:'📊 Generador CSV',                dot:'#34d399', desc:'Captura manual, pegado desde Excel, columnas'},
+  {id:'s3',  label:'📄 Generador ZipGrade PDF',       dot:'#a78bfa', desc:'Hojas de respuestas, código de barras Code-128C'},
+  {id:'s4',  label:'🔍 Filtro ZipGradeID',            dot:'#fbbf24', desc:'Filtrar por prefijo/sufijo de ZipGradeID'},
+  {id:'s5',  label:'📈 Analizador de Exámenes',       dot:'#fb7185', desc:'Estadísticas, secciones, exclusiones, PDF'},
+  {id:'s6',  label:'👥 Directorio de Alumnos',        dot:'#34d399', desc:'Perfiles individuales, patrón ID, directorio'},
+  {id:'s7',  label:'📱 ZipGrade App',                 dot:'#4ade80', desc:'App complementaria, descarga y exportación CSV'},
+  {id:'se',  label:'⚠️ Errores comunes',              dot:'#fb7185', desc:'Problemas globales de toda la suite'},
+  {id:'sf2', label:'📋 Formatos de archivos',         dot:'#38bdf8', desc:'Estructura exacta de cada tipo de archivo'},
+];
+var selected = new Set(SECTIONS.map(function(s){return s.id;}));
+
+function openPDFModal(){
+  var c = document.getElementById('modalSections');
+  c.innerHTML = SECTIONS.map(function(s){
+    return '<div class="ms-row selected" data-id="'+s.id+'" onclick="toggleSec(this,\''+s.id+'\')">'
+      +'<div class="ms-check">✓</div>'
+      +'<span class="ms-dot" style="background:'+s.dot+'"></span>'
+      +'<div><div class="ms-name">'+s.label+'</div><div class="ms-desc">'+s.desc+'</div></div>'
+      +'</div>';
+  }).join('');
+  document.getElementById('progWrap').style.display='none';
+  document.getElementById('progMsg').textContent='';
+  document.getElementById('btnGenPDF').disabled=false;
+  document.getElementById('btnGenPDF').textContent='Generar PDF';
+  document.getElementById('pdfModal').classList.add('open');
+}
+function closePDFModal(){document.getElementById('pdfModal').classList.remove('open');}
+function toggleSec(el,id){
+  el.classList.toggle('selected');
+  var ck=el.querySelector('.ms-check');
+  if(el.classList.contains('selected')){selected.add(id);ck.textContent='✓';}
+  else{selected.delete(id);ck.textContent='';}
+}
+function selAll(v){
+  document.querySelectorAll('.ms-row').forEach(function(el){
+    var id=el.dataset.id;
+    el.classList.toggle('selected',v);
+    el.querySelector('.ms-check').textContent=v?'✓':'';
+    if(v)selected.add(id);else selected.delete(id);
+  });
+}
+document.getElementById('pdfModal').addEventListener('click',function(e){if(e.target===this)closePDFModal();});
+
+// ══════════════════════ PDF GENERATOR ══════════════════════
+function setProg(pct,msg){
+  document.getElementById('progWrap').style.display='block';
+  document.getElementById('progBar').style.width=pct+'%';
+  document.getElementById('progMsg').textContent=msg;
+}
+
+function generatePDF(){
+  if(!selected.size){showToast('Selecciona al menos una sección');return;}
+  var jsPDFCtor=null;
+  if(window.jspdf&&window.jspdf.jsPDF)jsPDFCtor=window.jspdf.jsPDF;
+  else if(window.jsPDF)jsPDFCtor=window.jsPDF;
+  if(!jsPDFCtor){showToast('jsPDF no disponible — verifica tu conexión');return;}
+  document.getElementById('btnGenPDF').disabled=true;
+  document.getElementById('btnGenPDF').textContent='⏳ Generando…';
+  setTimeout(function(){
+    try{_buildPDF(jsPDFCtor);}
+    catch(e){console.error(e);showToast('Error: '+e.message);document.getElementById('btnGenPDF').disabled=false;document.getElementById('btnGenPDF').textContent='Generar PDF';}
+  },60);
+}
+
+function _buildPDF(jsPDF){
+  var doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var W=210,M=16,PH=297,BOTTOM=282;
+  var y=0;
+
+  // ── Paleta print-safe ──
+  var C={
+    ink:[15,23,42], ink2:[71,85,105], ink3:[148,163,184],
+    bord:[203,213,225], bg:[248,250,252], bghdr:[239,246,255],
+    blue:[37,99,235], bluel:[219,234,254],
+    green:[22,163,74], greenl:[220,252,231],
+    red:[185,28,28], redl:[254,226,226],
+    yel:[161,98,7], yell:[254,249,195],
+    acc:[37,99,235],
+    // tool colors (for doc render)
+    c1:[56,189,248], c2:[52,211,153], c3:[167,139,250],
+    c4:[251,191,36], c5:[251,113,133], c6:[52,211,153], c7:[74,222,128],
+  };
+
+  function ha(hex){if(!hex||hex[0]!='#')return[100,100,100];return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];}
+  function newPage(){doc.addPage();y=M;}
+  function checkY(need){if(y+need>BOTTOM)newPage();}
+  function rr(x,yy,w,h,r,s){if(w>0.1&&h>0.1)doc.roundedRect(x,yy,w,h,r,r,s);}
+  function pr(x,yy,w,h,s){doc.rect(x,yy,w,h,s);}
+  function tx(s,x,yy,o){doc.text(String(s),x,yy,o||{});}
+  var CW = W-M*2;
+
+  // ── Portada ──
+  doc.setFillColor(37,99,235);pr(0,0,W,8,'F');
+  doc.setFillColor(239,246,255);pr(0,8,W,55,'F');
+  doc.setDrawColor(203,213,225);doc.setLineWidth(0.3);doc.line(M,63,W-M,63);
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(37,99,235);
+  tx('SUITE ZIPGRADE PROFESIONAL',M,20);
+  doc.setFontSize(22);doc.setTextColor(15,23,42);
+  tx('Manual de Uso',M,34);
+  doc.setFont('helvetica','normal');doc.setFontSize(11);doc.setTextColor(71,85,105);
+  tx('Guía completa de herramientas para evaluación con ZipGrade',M,43);
+  doc.setFontSize(8.5);doc.setTextColor(148,163,184);
+  tx('Generado: '+new Date().toLocaleDateString('es-MX',{year:'numeric',month:'long',day:'numeric'}),M,52);
+  doc.setFontSize(8.5);doc.setTextColor(148,163,184);
+  tx('Versión 2025 · zipgrade.com · Uso interno docente',W-M,52,{align:'right'});
+
+  // Herramientas badges en portada
+  var tools=[
+    {n:'Separador',c:C.c1},{n:'Gen. CSV',c:C.c2},{n:'Gen. PDF',c:C.c3},
+    {n:'Filtro ID',c:C.c4},{n:'Analizador',c:C.c5},{n:'Directorio',c:C.c6}
+  ];
+  var bx=M, by=68;
+  tools.forEach(function(t,i){
+    var lbl=t.n;doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+    var lw=doc.getTextWidth(lbl)+10;
+    doc.setFillColor(t.c[0],t.c[1],t.c[2]);
+    // fill with low opacity — use light bg
+    var lc=[Math.min(255,t.c[0]+180),Math.min(255,t.c[1]+180),Math.min(255,t.c[2]+180)];
+    doc.setFillColor(lc[0],lc[1],lc[2]);
+    rr(bx,by-4,lw,7,1.5,'F');
+    doc.setTextColor(t.c[0],t.c[1],t.c[2]);
+    tx(lbl,bx+5,by+0.5);
+    bx+=lw+4;
+    if(bx>W-M-30){bx=M;by+=10;}
+  });
+
+  y=90;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(71,85,105);
+  var intro='Este manual describe el funcionamiento de cada herramienta de la Suite ZipGrade Profesional, incluyendo pasos de uso, parámetros de entrada/salida y soluciones a errores comunes. La suite está diseñada para docentes que utilizan la app ZipGrade para calificar exámenes de opción múltiple.';
+  var wl=doc.splitTextToSize(intro,CW);
+  wl.forEach(function(line){tx(line,M,y);y+=5;});
+  y+=4;
+
+  // ── Índice ──
+  checkY(10);
+  doc.setFillColor(239,246,255);pr(M,y-3,CW,8,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(37,99,235);
+  tx('CONTENIDO DE ESTE MANUAL',M+3,y+2.5);
+  y+=11;
+  var idxItems=[
+    {n:'01',t:'Visión general y requisitos técnicos',id:'s0'},
+    {n:'02',t:'Flujo de trabajo completo',id:'sf'},
+    {n:'03',t:'Separador de nombres y apellidos',id:'s1'},
+    {n:'04',t:'Generador de CSV',id:'s2'},
+    {n:'05',t:'Generador ZipGrade PDF (hojas de respuestas)',id:'s3'},
+    {n:'06',t:'Filtro ZipGradeID',id:'s4'},
+    {n:'07',t:'Analizador de Exámenes',id:'s5'},
+    {n:'08',t:'Directorio de Alumnos',id:'s6'},
+    {n:'09',t:'ZipGrade App — aplicación complementaria',id:'s7'},
+    {n:'10',t:'Errores comunes de toda la suite',id:'se'},
+    {n:'11',t:'Formatos de archivos de referencia',id:'sf2'},
+  ];
+  idxItems.forEach(function(it,i){
+    if(!selected.has(it.id))return;
+    checkY(6);
+    if(i%2===0){doc.setFillColor(248,250,252);pr(M,y-2,CW,5.5,'F');}
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(37,99,235);
+    tx(it.n,M+2,y+2);
+    doc.setFont('helvetica','normal');doc.setTextColor(15,23,42);
+    tx(it.t,M+12,y+2);
+    y+=5.5;
+  });
+  y+=6;
+
+  // ══════════════════ SECTION BUILDER ══════════════════
+  var total=selected.size, done=0;
+
+  function sectionHdr(num, title, sub, color){
+    newPage();
+    doc.setFillColor(color[0],color[1],color[2]);pr(0,0,W,6,'F');
+    // light tint bg
+    var lc=[Math.min(255,color[0]+185),Math.min(255,color[1]+185),Math.min(255,color[2]+185)];
+    doc.setFillColor(lc[0],lc[1],lc[2]);pr(0,6,W,22,'F');
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(color[0],color[1],color[2]);
+    tx(num,M,14);
+    doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(15,23,42);
+    tx(title,M,22);
+    doc.setDrawColor(203,213,225);doc.setLineWidth(0.3);doc.line(M,28,W-M,28);
+    if(sub){doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(71,85,105);
+      var sl=doc.splitTextToSize(sub,CW);sl.forEach(function(l,i){tx(l,M,33+i*4.5);});
+      y=33+sl.length*4.5+4;
+    }else{y=34;}
+  }
+
+  function blockHdr(txt, color){
+    checkY(12);
+    doc.setFillColor(248,250,252);rr(M,y-2,CW,8,1,'F');
+    doc.setDrawColor(color[0],color[1],color[2]);doc.setLineWidth(0.4);doc.line(M,y-2,M,y+6);
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(color[0],color[1],color[2]);
+    tx(txt,M+4,y+3.5);
+    y+=11;doc.setFont('helvetica','normal');doc.setTextColor(15,23,42);
+  }
+
+  function para(txt, indent){
+    indent=indent||0;
+    checkY(6);
+    var wl=doc.splitTextToSize(txt, CW-(indent*4));
+    doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(71,85,105);
+    wl.forEach(function(line){checkY(5);tx(line,M+indent*4,y);y+=4.5;});
+    y+=2;
+  }
+
+  function steps(items, color){
+    items.forEach(function(it,i){
+      checkY(16);
+      // number circle
+      doc.setFillColor(color[0],color[1],color[2]);rr(M,y-1,6,6,1.5,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(6);doc.setTextColor(255,255,255);
+      tx(String(i+1),M+3,y+3.5,{align:'center'});
+      // box
+      doc.setFillColor(248,250,252);rr(M+9,y-2,CW-9,it.lines?it.lines*4.5+8:12,1,'F');
+      doc.setDrawColor(203,213,225);doc.setLineWidth(0.2);rr(M+9,y-2,CW-9,it.lines?it.lines*4.5+8:12,1,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(15,23,42);
+      tx(it.title,M+12,y+3);
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(71,85,105);
+      var dl=doc.splitTextToSize(it.desc,CW-16);
+      dl.forEach(function(line,li){tx(line,M+12,y+7.5+li*4.2);});
+      it.lines=dl.length;
+      y+=it.lines*4.2+11;
+    });
+    y+=2;
+  }
+
+  function errorsBlock(items){
+    items.forEach(function(it){
+      checkY(20);
+      doc.setFillColor(254,226,226);rr(M,y-1,CW,it.height||16,1.5,'F');
+      doc.setDrawColor(251,113,133);doc.setLineWidth(0.25);rr(M,y-1,CW,it.height||16,1.5,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(185,28,28);
+      tx('⚠ '+it.title,M+3,y+4);
+      doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(71,85,105);
+      var el=doc.splitTextToSize(it.desc,CW-6);
+      el.forEach(function(line,li){tx(line,M+3,y+8.5+li*4);});
+      doc.setTextColor(22,163,74);doc.setFont('helvetica','bold');
+      var sl=doc.splitTextToSize('→ '+it.sol,CW-6);
+      var baseY=y+8.5+el.length*4+1;
+      sl.forEach(function(line,li){checkY(5);tx(line,M+3,baseY+li*4);});
+      it.height=(el.length+sl.length)*4+13;
+      y+=it.height+3;
+    });
+    y+=2;
+  }
+
+  function tipsBlock(items){
+    items.forEach(function(it){
+      checkY(12);
+      doc.setFillColor(219,234,254);rr(M,y-1,CW,12,1.5,'F');
+      doc.setDrawColor(147,197,253);doc.setLineWidth(0.2);rr(M,y-1,CW,12,1.5,'S');
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(37,99,235);
+      var tl=doc.splitTextToSize(it,CW-6);
+      tl.forEach(function(line,li){tx(line,M+3,y+4+li*4);});
+      y+=tl.length*4+8;
+    });
+    y+=2;
+  }
+
+  function table(hdrs, rows){
+    checkY(10);
+    var colW=hdrs.map(function(_){return CW/hdrs.length;});
+    // header
+    doc.setFillColor(239,246,255);pr(M,y,CW,7,'F');
+    doc.setDrawColor(203,213,225);doc.setLineWidth(0.2);pr(M,y,CW,7,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(37,99,235);
+    var cx=M+1.5;
+    hdrs.forEach(function(h,i){tx(h,cx,y+5);cx+=colW[i];});
+    y+=7;
+    rows.forEach(function(row,ri){
+      var maxLines=1;
+      var cells=row.map(function(cell){
+        var ls=doc.splitTextToSize(String(cell),colW[row.indexOf(cell)]-3);
+        maxLines=Math.max(maxLines,ls.length);return ls;
+      });
+      var rH=maxLines*4.5+3;
+      checkY(rH);
+      if(ri%2===0){doc.setFillColor(248,250,252);pr(M,y,CW,rH,'F');}
+      doc.setDrawColor(203,213,225);doc.setLineWidth(0.1);doc.line(M,y+rH,M+CW,y+rH);
+      var cx2=M+1.5;
+      cells.forEach(function(ls,ci){
+        doc.setFont('helvetica',ci===0?'bold':'normal');
+        doc.setFontSize(7.5);doc.setTextColor(ci===0?15:71,ci===0?23:85,ci===0?42:105);
+        ls.forEach(function(line,li){tx(line,cx2,y+4+li*4.5);});
+        cx2+=colW[ci];
+      });
+      y+=rH;
+    });
+    doc.setDrawColor(203,213,225);doc.setLineWidth(0.2);doc.line(M,y,M+CW,y);
+    y+=5;
+  }
+
+  function codeBlock(lines){
+    checkY(lines.length*5+8);
+    doc.setFillColor(248,250,252);rr(M,y,CW,lines.length*4.5+6,1,'F');
+    doc.setDrawColor(203,213,225);doc.setLineWidth(0.2);rr(M,y,CW,lines.length*4.5+6,1,'S');
+    doc.setFont('courier','normal');doc.setFontSize(7.5);doc.setTextColor(37,99,235);
+    lines.forEach(function(l,i){tx(l,M+4,y+5+i*4.5);});
+    y+=lines.length*4.5+10;
+  }
+
+  // ══════════════════ BUILD SECTIONS ══════════════════
+
+  // s0: Visión general
+  if(selected.has('s0')){
+    setProg(Math.round(done/total*90)+5,'Sección: Visión general…');done++;
+    sectionHdr('01 — Introducción','¿Qué es la Suite ZipGrade?','Conjunto de herramientas web para docentes que usan ZipGrade. Sin instalación, sin registro, datos 100% locales.',C.blue);
+    blockHdr('Herramientas incluidas',C.blue);
+    table(['Herramienta','Función','Entrada','Salida'],[
+      ['📋 Separador','Divide nombre/apellidos de listas','Texto libre','CSV estructurado'],
+      ['📊 Generador CSV','Captura tabla de alumnos','Manual / Excel','CSV UTF-8'],
+      ['📄 Gen. ZipGrade PDF','Hojas de respuestas Code-128C','CSV alumnos + imagen','PDF Carta'],
+      ['🔍 Filtro ZipGradeID','Filtra por prefijo/sufijo del ID','CSV ZipGrade','CSV filtrado'],
+      ['📈 Analizador','Estadísticas completas del grupo','CSV(s) ZipGrade','Dashboard+CSV+PDF'],
+      ['👥 Directorio','Perfiles individuales por alumno','CSV ZipGrade+directorio','Perfiles PDF'],
+    ]);
+    blockHdr('Requisitos técnicos',C.blue);
+    tipsBlock([
+      'Navegador moderno: Chrome 90+, Firefox 88+, Edge 90+ o Safari 14+. NO compatible con Internet Explorer.',
+      'Resolución mínima recomendada: 1280 × 720 px (tablet horizontal o PC).',
+      'Archivos CSV: guardar en UTF-8. En Excel: Guardar como → CSV UTF-8 (con BOM).',
+    ]);
+  }
+
+  // sf: Flujo de trabajo
+  if(selected.has('sf')){
+    setProg(Math.round(done/total*90)+5,'Sección: Flujo de trabajo…');done++;
+    sectionHdr('02 — Flujo de trabajo','Ciclo completo de evaluación','El flujo conecta las herramientas en secuencia. Pasos 1-3 antes del examen. Pasos 4-7 después de escanear.',C.green);
+    blockHdr('Secuencia recomendada',C.green);
+    steps([
+      {title:'1. Preparar lista de alumnos (Separador + Generador CSV)',desc:'Parte de los nombres en bruto, los divide con el Separador y exporta el CSV. Alternativamente captura directamente en el Generador CSV.'},
+      {title:'2. Generar hojas de respuestas (Generador ZipGrade PDF)',desc:'Carga el CSV de alumnos y la imagen de la hoja preimpresa. Genera el PDF con una hoja por alumno, incluyendo nombre, cuadrícula marcada y código de barras.'},
+      {title:'3. Aplicar y escanear el examen (ZipGrade App)',desc:'Imprime las hojas al 100% sin ajuste de márgenes. Los alumnos responden. Escanea con la app ZipGrade en iOS o Android y exporta el CSV de resultados.'},
+      {title:'4. Filtrar por grupo si aplica (Filtro ZipGradeID)',desc:'Si tienes varios grupos en el mismo export, usa el Filtro para separar por prefijo del ZipGradeID antes de analizar.'},
+      {title:'5. Analizar resultados (Analizador de Exámenes)',desc:'Carga el CSV filtrado. Configura secciones por materia. Revisa estadísticas, gráficas y análisis por reactivo. Genera reporte PDF.'},
+      {title:'6. Reportes individuales (Directorio de Alumnos)',desc:'Asocia nombres a IDs, configura el patrón del ID y genera perfiles individuales con posición grupal y análisis de errores.'},
+    ],C.green);
+  }
+
+  // s1: Separador
+  if(selected.has('s1')){
+    setProg(Math.round(done/total*90)+5,'Sección: Separador de nombres…');done++;
+    sectionHdr('03 — Herramienta','Separador de nombres y apellidos','Divide listas de nombres en Nombre(s), 1er Apellido y 2do Apellido con detección automática de preposiciones.',C.c1);
+    blockHdr('Código de colores de bloques',C.c1);
+    table(['Color','Columna asignada','Nota'],[
+      ['Azul','Nombre(s)','Nombre propio del alumno'],
+      ['Verde','1er Apellido','Apellido paterno'],
+      ['Violeta','2do Apellido','Apellido materno'],
+      ['Ámbar','Preposición (PREP)','De la, Del, Van der… siempre con el apellido a su derecha'],
+    ]);
+    blockHdr('Indicadores de confianza',C.c1);
+    table(['Indicador','Significado','Acción recomendada'],[
+      ['A — Alta','El algoritmo reconoció nombre y apellidos','Verificar visualmente, generalmente correcto'],
+      ['M — Media','Solo uno de los campos fue reconocido','Revisar la asignación de al menos un bloque'],
+      ['B — Baja','Ningún campo fue reconocido en la base de datos','Revisar y corregir manualmente arrastrando bloques'],
+    ]);
+    blockHdr('Errores comunes',C.c1);
+    errorsBlock([
+      {title:'"Sin registros aún" — no aparecen resultados',desc:'El área de texto está vacía o no se presionó el botón Procesar.',sol:'Pegar al menos un nombre y presionar el botón azul "Procesar".'},
+      {title:'Bloque con confianza "B" (baja)',desc:'Nombre muy inusual o extranjero no reconocido en la base de datos interna.',sol:'Arrastrar los bloques a las columnas correctas. Clic en el bloque para editar texto.'},
+      {title:'CSV exportado con caracteres rotos (â€™)',desc:'Excel abrió el CSV sin especificar la codificación UTF-8.',sol:'Abrir Excel → Datos → Desde texto/CSV → Origen de archivo: 65001 (UTF-8).'},
+    ]);
+  }
+
+  // s2: Generador CSV
+  if(selected.has('s2')){
+    setProg(Math.round(done/total*90)+5,'Sección: Generador CSV…');done++;
+    sectionHdr('04 — Herramienta','Generador de CSV','Tabla de captura directa con importación inteligente de Excel mediante Ctrl+V.',C.c2);
+    blockHdr('Columnas requeridas',C.c2);
+    table(['Columna','Descripción','Formato','Ejemplo'],[
+      ['NOMBRES','Nombre(s) del alumno','Texto, acepta tildes y ñ','XIMENA SARAHÍ'],
+      ['PRIMER_APELLIDO','Apellido paterno','Texto libre','PADRÓN'],
+      ['SEGUNDO_APELLIDO','Apellido materno','Texto libre','ZÚÑIGA'],
+      ['ASIGNACION','Código único ZipGradeID','Hasta 9 dígitos numéricos','004070109'],
+      ['GRUPO','Grupo o sección','Letra o código corto','A / B / 3A'],
+    ]);
+    blockHdr('Atajos de teclado',C.c2);
+    table(['Tecla','Acción'],[
+      ['Tab','Avanza a la siguiente columna'],
+      ['Enter','Baja a la fila siguiente'],
+      ['↑ / ↓','Navegar entre filas'],
+      ['Ctrl+V','Pegar tabla desde Excel (abre modal de configuración)'],
+    ]);
+    blockHdr('Errores comunes',C.c2);
+    errorsBlock([
+      {title:'Modal de pegado: columnas no mapeadas correctamente',desc:'El encabezado de Excel no coincide con los nombres esperados.',sol:'En el modal, usar los selectores desplegables para asignar manualmente cada columna al destino correcto.'},
+      {title:'"No hay datos para exportar"',desc:'La tabla está vacía o todas las filas están en blanco.',sol:'Agregar al menos una fila con datos, o importar un archivo CSV existente.'},
+    ]);
+  }
+
+  // s3: Generador PDF
+  if(selected.has('s3')){
+    setProg(Math.round(done/total*90)+5,'Sección: Generador ZipGrade PDF…');done++;
+    sectionHdr('05 — Herramienta','Generador ZipGrade PDF','Produce hojas de respuestas personalizadas con nombre, cuadrícula marcada y código de barras Code-128C.',C.c3);
+    blockHdr('Pasos de uso',C.c3);
+    steps([
+      {title:'① Cargar CSV de alumnos',desc:'Arrastrar o seleccionar el CSV. Columnas requeridas: NOMBRES, PRIMER_APELLIDO, SEGUNDO_APELLIDO, ASIGNACION, GRUPO.'},
+      {title:'② Cargar imagen de fondo (opcional)',desc:'PNG, JPG o WEBP de la hoja preimpresa de ZipGrade. Las imágenes WEBP se convierten automáticamente a JPEG. Ocupa el 100% de la hoja carta.'},
+      {title:'③ Verificar vista previa',desc:'Revisar número de alumnos, grupos y páginas antes de generar.'},
+      {title:'④ Generar e imprimir / descargar',desc:'Imprimir siempre al 100%, sin ajuste de márgenes, papel Carta (Letter). El archivo se llama ZipGrade_N_alumnos.pdf.'},
+    ],C.c3);
+    blockHdr('Errores comunes',C.c3);
+    errorsBlock([
+      {title:'"Columnas faltantes: ASIGNACION, GRUPO…"',desc:'El CSV no tiene todos los encabezados requeridos o están escritos diferente.',sol:'Verificar que la primera fila del CSV sea exactamente: NOMBRES, PRIMER_APELLIDO, SEGUNDO_APELLIDO, ASIGNACION, GRUPO (sin espacios, en mayúsculas).'},
+      {title:'Las marcas no coinciden con los óvalos de la hoja',desc:'La hoja se imprimió con escala distinta al 100% o con márgenes ajustados automáticamente.',sol:'Al imprimir: escala = 100%, sin "Ajustar a página", sin márgenes automáticos, papel = Carta.'},
+      {title:'El código de barras no es leído por ZipGrade',desc:'La ASIGNACION tiene menos de 9 dígitos o contiene letras.',sol:'Usar exactamente 9 dígitos numéricos en ASIGNACION. El sistema rellena con ceros si faltan.'},
+      {title:'La generación tarda mucho / navegador se congela',desc:'Más de 200 alumnos con imagen de fondo de alta resolución.',sol:'Reducir resolución de imagen a 150 DPI (1275×1650 px) o generar en lotes de 100 alumnos.'},
+    ]);
+  }
+
+  // s4: Filtro
+  if(selected.has('s4')){
+    setProg(Math.round(done/total*90)+5,'Sección: Filtro ZipGradeID…');done++;
+    sectionHdr('06 — Herramienta','Filtro ZipGradeID','Extrae subconjuntos de alumnos por prefijo o sufijo del código ZipGradeID.',C.c4);
+    blockHdr('Modos de filtro',C.c4);
+    table(['Modo','Descripción','Ejemplo'],[
+      ['Empieza con…','Filtra por los primeros dígitos del ID','Prefijo "402" → todos los IDs que empiecen con 402'],
+      ['Termina con…','Filtra por los últimos dígitos del ID','Sufijo "001" → todos los IDs que terminen en 001'],
+      ['Ambos','Aplica prefijo Y sufijo simultáneamente','Prefijo "402" + sufijo "01" → IDs que empiecen con 402 Y terminen en 01'],
+    ]);
+    blockHdr('Errores comunes',C.c4);
+    errorsBlock([
+      {title:'"No se encontró la columna ZipGradeID"',desc:'El CSV no fue exportado por ZipGrade o tiene un encabezado diferente.',sol:'Verificar que el archivo tenga una columna llamada exactamente "ZipGradeID". Solo exports de ZipGrade tienen este campo.'},
+      {title:'"0 registros" con un filtro aparentemente correcto',desc:'El prefijo o sufijo no coincide con ningún ID del archivo.',sol:'Revisar un ID real en la vista previa para confirmar exactamente qué dígitos usar como filtro.'},
+    ]);
+  }
+
+  // s5: Analizador
+  if(selected.has('s5')){
+    setProg(Math.round(done/total*90)+5,'Sección: Analizador de Exámenes…');done++;
+    sectionHdr('07 — Herramienta','Analizador de Exámenes','Estadísticas completas del grupo: distribución, secciones por materia, análisis de reactivos y reporte PDF.',C.c5);
+    blockHdr('Pestañas disponibles',C.c5);
+    table(['Pestaña','Contenido'],[
+      ['📋 Alumnos','Tabla ordenable con barra de % por alumno. Botón "Ver" muestra cuadrícula de respuestas.'],
+      ['📚 Secciones','% de cada alumno desglosado por materia (requiere configurar secciones).'],
+      ['📊 Gráficas','Distribución por decil, alumnos por rango y promedio por sección.'],
+      ['🔬 Reactivos','Mini-tarjeta por reactivo con % de aciertos del grupo. Identifica reactivos problemáticos.'],
+    ]);
+    blockHdr('Configurar secciones',C.c5);
+    para('En la barra lateral → "Secciones del examen" → "+ Agregar sección". Asignar nombre de materia, reactivo inicial y final (ej: Matemáticas P1-P20). Las secciones no deben traslaparse y deben cubrir todos los reactivos.',0);
+    blockHdr('Exclusión de reactivos',C.c5);
+    para('Escribir el número de reactivo en "Reactivos excluidos" y confirmar con un motivo. El reactivo aparece con borde punteado y NO afecta calificaciones ni reportes.',0);
+    blockHdr('Tipos de reporte PDF',C.c5);
+    table(['Tipo','Contenido incluido'],[
+      ['General del grupo','Resumen estadístico, tabla de calificaciones, distribución, análisis de reactivos, top 10'],
+      ['Individual','Un alumno: score global, desempeño por sección, cuadrícula de respuestas, análisis de errores'],
+      ['General + Individual','General del grupo + perfil completo de cada alumno (una hoja por alumno)'],
+    ]);
+    blockHdr('Errores comunes',C.c5);
+    errorsBlock([
+      {title:'No aparecen datos al cargar el CSV',desc:'El archivo no es un export válido de ZipGrade o tiene formato diferente.',sol:'Verificar que el CSV tenga columnas: ZipGradeID, EarnedPts, PossiblePts, PercentCorrect y Stu1…StuN, Key1…KeyN.'},
+      {title:'Los porcentajes no coinciden con ZipGrade',desc:'Hay reactivos excluidos activos o filtro de rango aplicado.',sol:'Verificar panel "Reactivos excluidos" y limpiar los filtros en la barra lateral.'},
+    ]);
+  }
+
+  // s6: Directorio
+  if(selected.has('s6')){
+    setProg(Math.round(done/total*90)+5,'Sección: Directorio de Alumnos…');done++;
+    sectionHdr('08 — Herramienta','Directorio de Alumnos','Vincula nombres reales a IDs y genera reportes individuales con análisis de errores y comparativo grupal.',C.c6);
+    blockHdr('Diferencia con el Analizador',C.c6);
+    para('Mientras el Analizador trabaja con IDs anónimos, el Directorio asocia NOMBRES REALES a cada ZipGradeID. El directorio se guarda automáticamente en el navegador (localStorage) y persiste entre sesiones en el mismo dispositivo.',0);
+    blockHdr('CSV de directorio — formato',C.c6);
+    codeBlock(['ZipGradeID,Nombre,Apellido,Grupo,Turno,Nota','000404201,Juan Carlos,García López,3A,Matutino,','000404202,Sofía,Hernández De la Rosa,3A,Matutino,NEE']);
+    blockHdr('Patrón del ZipGradeID',C.c6);
+    para('El Patrón ID define cómo se segmentan los dígitos del ZipGradeID (ej: 3 dígitos de escuela + 2 de ciclo + 4 de folio). Activa el decodificador visual en la barra lateral para identificar rápidamente a qué escuela/ciclo pertenece cada alumno.',0);
+    blockHdr('Errores comunes',C.c6);
+    errorsBlock([
+      {title:'El directorio se pierde al cambiar de dispositivo',desc:'El directorio usa localStorage del navegador, que es local a cada dispositivo.',sol:'Exportar el directorio como CSV desde el modal Directorio → guardar en Drive/USB → reimportar en otro dispositivo.'},
+      {title:'Alumno sin nombre ("sin nombre" en la lista)',desc:'El ZipGradeID del alumno no está en el directorio.',sol:'Abrir modal Directorio → agregar el ID y nombre manualmente, o importar el CSV de directorio que incluya ese ID.'},
+    ]);
+  }
+
+  // s7: ZipGrade App
+  if(selected.has('s7')){
+    setProg(Math.round(done/total*90)+5,'Sección: ZipGrade App…');done++;
+    sectionHdr('09 — App complementaria','ZipGrade — App de captura','App móvil externa para escanear hojas de respuestas. Los exports CSV son la entrada para toda la suite.',C.c7);
+    blockHdr('Descarga',C.c7);
+    tipsBlock([
+      'iOS (iPhone/iPad): App Store — zipgrade.com/get — Requiere iOS 13+',
+      'Android: Google Play — zipgrade.com/getAndroid — Requiere Android 6+',
+      'Documentación oficial y soporte: zipgrade.com',
+    ]);
+    blockHdr('Cómo exportar desde ZipGrade',C.c7);
+    steps([
+      {title:'Abrir el quiz calificado',desc:'En ZipGrade → lista de quizzes → seleccionar el examen terminado.'},
+      {title:'Exportar resultados',desc:'Menú → Export → "Export to CSV" → seleccionar "Detailed Report" (incluye columnas Stu1…StuN con respuestas individuales).'},
+      {title:'Enviar el CSV al PC',desc:'Via correo, Drive, AirDrop o cable USB. NO modificar el archivo para preservar la codificación.'},
+      {title:'Cargar en la suite',desc:'Usar Filtro ZipGradeID para separar por grupo si aplica, luego cargar en Analizador o Directorio.'},
+    ],C.c7);
+  }
+
+  // se: Errores comunes
+  if(selected.has('se')){
+    setProg(Math.round(done/total*90)+5,'Sección: Errores comunes…');done++;
+    sectionHdr('10 — Referencia','Errores comunes de toda la suite','Problemas que pueden ocurrir en cualquier herramienta de la suite.',C.red);
+    errorsBlock([
+      {title:'La herramienta no carga o se ve en blanco',desc:'El script de jsPDF no se descargó desde el CDN, o hay un bloqueador de contenido activo.',sol:'Desactivar ad-blockers para este sitio. Recargar con Ctrl+Shift+R (caché limpio).'},
+      {title:'En móvil: aparece aviso "optimizado para tablet o PC"',desc:'La pantalla es menor a 768px de ancho.',sol:'Usar desde un PC o tablet. El botón "Continuar de todas formas" permite acceder con limitaciones.'},
+      {title:'Caracteres especiales (á, é, ñ) aparecen rotos en CSV',desc:'El archivo se guardó en encoding ANSI/Latin-1 en lugar de UTF-8.',sol:'En Excel: Archivo → Guardar como → tipo "CSV UTF-8 (delimitado por comas)".'},
+      {title:'El PDF no descarga / el botón no responde',desc:'El navegador bloqueó la descarga automática.',sol:'Revisar barra de notificaciones del navegador → "Descarga bloqueada" → Permitir.'},
+      {title:'Los datos del directorio desaparecieron',desc:'Se limpió el caché o se usó modo incógnito.',sol:'Siempre exportar el directorio como CSV de respaldo. El modo incógnito no persiste localStorage.'},
+    ]);
+  }
+
+  // sf2: Formatos
+  if(selected.has('sf2')){
+    setProg(Math.round(done/total*90)+5,'Sección: Formatos de archivos…');done++;
+    sectionHdr('11 — Referencia','Formatos de archivos','Estructura exacta de cada tipo de archivo utilizado en la suite.',C.blue);
+    blockHdr('CSV de alumnos — entrada para Generador PDF',C.blue);
+    codeBlock(['NOMBRES,PRIMER_APELLIDO,SEGUNDO_APELLIDO,ASIGNACION,GRUPO','JUAN CARLOS,GARCÍA,LÓPEZ,000404201,A','SOFÍA,HERNÁNDEZ,DE LA ROSA,000404202,A','XIMENA SARAHÍ,PADRÓN,ZÚÑIGA,000404203,B']);
+    blockHdr('CSV export de ZipGrade — entrada para Filtro/Analizador/Directorio',C.blue);
+    codeBlock(['ZipGradeID,EarnedPts,PossiblePts,PercentCorrect,KeyVersion,Stu1,Key1,EarnedPt1,Stu2,Key2,EarnedPt2…','000404201,18,20,90.0,A,A,A,1,B,C,0,C,C,1…','000404202,15,20,75.0,A,A,A,1,A,C,0…']);
+    para('Stu1…StuN = respuesta del alumno por reactivo. Key1…KeyN = clave correcta. EarnedPt1…EarnedPtN = 1 si acertó, 0 si no.',0);
+    blockHdr('CSV de directorio — entrada para Directorio de Alumnos',C.blue);
+    codeBlock(['ZipGradeID,Nombre,Apellido,Grupo,Turno,Nota','000404201,Juan Carlos,García López,3A,Matutino,','000404202,Sofía,Hernández De la Rosa,3A,Matutino,NEE']);
+  }
+
+  // ── Footers ──
+  var nP=doc.internal.getNumberOfPages();
+  for(var pi=1;pi<=nP;pi++){
+    doc.setPage(pi);
+    doc.setDrawColor(203,213,225);doc.setLineWidth(0.2);doc.line(M,287,W-M,287);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(148,163,184);
+    tx('Suite ZipGrade Profesional — Manual de Uso',M,292);
+    doc.setFont('helvetica','bold');doc.setTextColor(71,85,105);
+    tx(pi+' / '+nP,W-M,292,{align:'right'});
+  }
+
+  setProg(100,'¡PDF generado!');
+  var fname='ZipGrade_Manual_'+new Date().toISOString().slice(0,10)+'.pdf';
+  doc.save(fname);
+  showToast('✓ Manual descargado: '+fname);
+  setTimeout(function(){
+    document.getElementById('progWrap').style.display='none';
+    document.getElementById('btnGenPDF').disabled=false;
+    document.getElementById('btnGenPDF').textContent='Generar PDF';
+    closePDFModal();
+  },2000);
+}
+</script>
+</body>
+</html>

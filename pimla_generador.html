@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador ZipGrade PDF — Suite ZipGrade</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f;
+  --surface:#0d1117;
+  --surface2:#111827;
+  --surface3:#1a2235;
+  --deep:#040508;
+  --border:#1a2235;
+  --border2:#243044;
+  --border3:#2d3f5a;
+  --text:#e2e8f0;
+  --text2:#94a3b8;
+  --muted:#475569;
+
+  /* Tool accent — PDF Generator = violet */
+  --accent:#a78bfa;
+  --accent-dim:rgba(167,139,250,.1);
+  --accent-border:rgba(167,139,250,.22);
+  --accent-hi:#c4b5fd;
+
+  --green:#34d399;
+  --green-dim:rgba(52,211,153,.1);
+  --green-border:rgba(52,211,153,.22);
+
+  --danger:#fb7185;
+  --danger-dim:rgba(251,113,133,.1);
+  --danger-border:rgba(251,113,133,.22);
+
+  --amber:#fbbf24;
+  --amber-dim:rgba(251,191,36,.1);
+  --amber-border:rgba(251,191,36,.22);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Sora',sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border3);border-radius:4px}
+
+/* ── HEADER ── */
+header{
+  background:var(--deep);border-bottom:1px solid var(--border);
+  padding:0 22px;height:50px;position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.header-brand{display:flex;align-items:center;gap:10px;}
+.tool-badge{
+  display:flex;align-items:center;gap:7px;
+  padding:4px 12px 4px 8px;border-radius:8px;
+  background:var(--accent-dim);border:1px solid var(--accent-border);flex-shrink:0;
+}
+.tool-badge-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 0 3px rgba(167,139,250,.15);
+}
+.tool-badge-name{font-size:12px;font-weight:600;color:var(--accent);}
+.header-sub{font-size:11px;color:var(--muted);margin-left:4px;}
+.header-meta{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
+
+/* ── CONTAINER ── */
+.container{
+  max-width:860px;margin:1.6rem auto;padding:0 1.2rem;
+  display:flex;flex-direction:column;gap:14px;
+}
+
+/* ── CARD ── */
+.card{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:12px;padding:1.3rem 1.5rem;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg,rgba(167,139,250,.03) 0%,transparent 50%);
+  border-radius:12px;
+}
+.card-title{
+  font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:.9rem;padding-bottom:.55rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.step-num{
+  width:18px;height:18px;border-radius:50%;
+  background:var(--accent-dim);border:1px solid var(--accent-border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:var(--accent);flex-shrink:0;
+}
+
+/* ── DROPZONE CSV ── */
+.dropzone{
+  border:1.5px dashed var(--border2);border-radius:10px;
+  padding:1.5rem;text-align:center;cursor:pointer;
+  transition:.18s;position:relative;background:var(--surface2);
+}
+.dropzone:hover,.dropzone.over{border-color:var(--accent);background:var(--accent-dim);}
+.dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.dropzone-ico{font-size:1.8rem;display:block;margin-bottom:.4rem}
+.dropzone p{font-size:.8rem;color:var(--text2)}
+.dropzone strong{color:var(--accent)}
+
+/* ── DROPZONE IMAGEN ── */
+.img-dz{
+  border:1.5px dashed var(--border2);border-radius:10px;
+  padding:1.3rem;text-align:center;cursor:pointer;
+  transition:.18s;position:relative;background:var(--surface2);
+}
+.img-dz:hover,.img-dz.over{border-color:var(--accent);background:var(--accent-dim);}
+.img-dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.img-dz-ico{font-size:2rem;display:block;margin-bottom:.3rem}
+.img-dz p{font-size:.8rem;color:var(--text2);margin:.12rem 0}
+.img-dz .sub{font-size:.68rem;color:var(--muted)}
+.img-dz strong{color:var(--accent)}
+
+/* ── IMAGE PREVIEW ── */
+.img-prev{display:none;margin-top:1rem;gap:1rem;align-items:flex-start;flex-wrap:wrap}
+.img-prev.visible{display:flex}
+.img-thumb{
+  width:80px;height:104px;object-fit:cover;flex-shrink:0;
+  border:1px solid var(--border2);border-radius:6px;background:var(--surface3);
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+.img-meta{
+  font-family:'DM Mono',monospace;font-size:.68rem;color:var(--text2);
+  line-height:1.9;flex:1;min-width:160px;
+}
+.img-meta strong{color:var(--text);display:block;margin-bottom:.2rem;font-size:.74rem}
+.img-meta .note-bg{font-size:.63rem;color:var(--muted);margin-top:.5rem;line-height:1.75}
+.btn-rm{
+  font-family:'Sora',sans-serif;font-size:.65rem;font-weight:600;
+  letter-spacing:.04em;text-transform:uppercase;
+  background:transparent;border:1px solid var(--danger-border);
+  color:var(--danger);padding:.3rem .75rem;cursor:pointer;
+  border-radius:6px;margin-top:.65rem;transition:.14s;display:inline-block;
+}
+.btn-rm:hover{background:var(--danger-dim);}
+
+/* ── BADGES ── */
+.badge-ok{
+  display:inline-flex;align-items:center;gap:.45rem;
+  background:var(--green-dim);border:1px solid var(--green-border);
+  color:var(--green);font-family:'DM Mono',monospace;font-size:.67rem;
+  padding:.32rem .8rem;border-radius:6px;margin-top:.85rem;
+}
+.badge-no{
+  display:inline-flex;align-items:center;gap:.45rem;
+  background:var(--surface3);border:1px solid var(--border2);
+  color:var(--muted);font-family:'DM Mono',monospace;font-size:.67rem;
+  padding:.32rem .8rem;border-radius:6px;margin-top:.85rem;
+}
+
+/* ── HINT ── */
+.hint{
+  background:var(--surface2);border-left:2px solid var(--accent);
+  border-radius:0 8px 8px 0;padding:.8rem 1rem;
+  font-family:'DM Mono',monospace;font-size:.69rem;
+  color:var(--text2);line-height:2;margin-top:.8rem;
+}
+.hint strong{color:var(--text)}
+.hint code{
+  background:var(--surface3);border:1px solid var(--border2);
+  padding:.05rem .35rem;border-radius:4px;color:var(--accent);
+}
+
+/* ── TABLE ── */
+.tbl-wrap{
+  overflow:auto;max-height:260px;border:1px solid var(--border2);
+  border-radius:8px;
+}
+table{width:100%;border-collapse:collapse;font-size:.74rem}
+thead th{
+  background:var(--surface2);color:var(--muted);
+  font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.1em;
+  text-transform:uppercase;padding:.5rem .75rem;text-align:left;
+  position:sticky;top:0;white-space:nowrap;border-bottom:1px solid var(--border2);
+}
+tbody tr{border-bottom:1px solid var(--border);}
+tbody tr:hover{background:rgba(167,139,250,.04)}
+tbody td{
+  padding:.42rem .75rem;
+  font-family:'DM Mono',monospace;font-size:.7rem;color:var(--text2);white-space:nowrap;
+}
+.tag{
+  display:inline-block;padding:.08rem .4rem;
+  background:var(--accent-dim);border:1px solid var(--accent-border);
+  color:var(--accent);font-size:.6rem;font-family:'DM Mono',monospace;
+  border-radius:4px;
+}
+
+/* ── STATS ── */
+.stats{display:flex;gap:.8rem;margin-bottom:.9rem;flex-wrap:wrap}
+.stat{
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:8px;padding:.55rem .9rem;
+  display:flex;flex-direction:column;gap:.05rem;
+}
+.stat-v{font-family:'DM Mono',monospace;font-weight:700;font-size:1.2rem;color:var(--accent)}
+.stat-l{font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+
+/* ── CONTROLS ── */
+.controls{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}
+.btn{
+  font-family:'Sora',sans-serif;font-size:.72rem;font-weight:600;
+  letter-spacing:.03em;border:1px solid transparent;
+  padding:.55rem 1.1rem;cursor:pointer;transition:.14s;
+  display:inline-flex;align-items:center;gap:.4rem;border-radius:8px;
+}
+.btn-accent{background:var(--accent);color:#000;border-color:var(--accent);}
+.btn-accent:hover{background:var(--accent-hi);border-color:var(--accent-hi);}
+.btn-ghost{background:transparent;color:var(--text2);border-color:var(--border2);}
+.btn-ghost:hover{background:var(--surface3);border-color:var(--border3);color:var(--text);}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn:active:not(:disabled){transform:scale(.97)}
+
+/* ── STATUS ── */
+.status{
+  font-family:'DM Mono',monospace;font-size:.7rem;
+  padding:.42rem .9rem;flex:1;min-width:160px;border-radius:7px;
+}
+.s-ok{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);}
+.s-err{background:var(--danger-dim);color:var(--danger);border:1px solid var(--danger-border);}
+.s-info{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);}
+
+/* ── PROGRESS ── */
+.prog-wrap{
+  background:var(--surface3);border-radius:99px;
+  height:3px;overflow:hidden;margin-top:.8rem;display:none;
+}
+.prog-bar{height:100%;background:var(--accent);width:0%;transition:width .2s;border-radius:99px;}
+.prog-lbl{
+  font-family:'DM Mono',monospace;font-size:.66rem;
+  color:var(--muted);margin-top:.35rem;
+}
+.note{
+  font-size:.7rem;color:var(--muted);
+  font-family:'DM Mono',monospace;margin-top:.8rem;line-height:1.75;
+}
+.note strong{color:var(--text2)}
+
+/* ── FADE ANIMATION ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:fadeUp .3s ease both;}
+.card:nth-child(1){animation-delay:.04s}
+.card:nth-child(2){animation-delay:.1s}
+.card:nth-child(3){animation-delay:.16s}
+.card:nth-child(4){animation-delay:.22s}
+.card:nth-child(5){animation-delay:.28s}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-brand">
+    <div class="tool-badge">
+      <div class="tool-badge-dot"></div>
+      <span class="tool-badge-name">Generador ZipGrade (PDF)</span>
+    </div>
+    <span class="header-sub">Hojas de respuestas con código de barras</span>
+  </div>
+  <div class="header-meta">PDF · Code-128C</div>
+</header>
+
+<div class="container">
+
+  <!-- ① CSV -->
+  <div class="card">
+    <div class="card-title">
+      <span class="step-num">1</span>
+      Cargar Base de Datos CSV
+    </div>
+    <div class="dropzone" id="dz">
+      <input type="file" id="csvIn" accept=".csv">
+      <span class="dropzone-ico">📋</span>
+      <p>Arrastra tu <strong>.csv</strong> aquí o haz clic para seleccionar</p>
+    </div>
+    <div class="hint">
+      <strong>Columnas requeridas (primera fila = encabezado, separadas por coma):</strong><br>
+      <code>NOMBRES, PRIMER_APELLIDO, SEGUNDO_APELLIDO, ASIGNACION, GRUPO</code><br><br>
+      • <strong>NOMBRES</strong> — Nombre(s). Acepta: <code>á é í ó ú ü ñ Á É Í Ó Ú Ü Ñ</code><br>
+      • <strong>PRIMER_APELLIDO</strong> — 1er apellido<br>
+      • <strong>SEGUNDO_APELLIDO</strong> — 2do apellido<br>
+      • <strong>ASIGNACION</strong> — 9 dígitos numéricos (ej: <code>000404201</code>)<br>
+      • <strong>GRUPO</strong> — Una letra A–J<br><br>
+      Guardar como <strong>CSV UTF-8</strong> (Excel: Guardar como → CSV UTF-8)
+    </div>
+  </div>
+
+  <!-- ② IMAGEN DE FONDO -->
+  <div class="card">
+    <div class="card-title">
+      <span class="step-num">2</span>
+      Imagen de Fondo — Hoja Preimpresa
+      <span style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:9px;">(opcional)</span>
+    </div>
+    <div class="img-dz" id="imgDz">
+      <input type="file" id="imgIn" accept="image/png,image/jpeg,image/jpg,image/webp">
+      <span class="img-dz-ico">🖼️</span>
+      <p>Arrastra la imagen de la hoja ZipGrade aquí o <strong>haz clic para seleccionar</strong></p>
+      <p class="sub">PNG · JPG · WEBP — se coloca a tamaño carta completo en todas las páginas</p>
+    </div>
+    <div class="img-prev" id="imgPrev">
+      <img id="imgThumb" class="img-thumb" src="" alt="Vista previa">
+      <div class="img-meta">
+        <strong id="imgName">—</strong>
+        Tamaño: <span id="imgSize">—</span><br>
+        Resolución: <span id="imgDims">—</span><br>
+        Formato PDF: <span id="imgFmt">—</span>
+        <p class="note-bg">
+          ✔ La imagen se insertará como fondo en <strong>cada página</strong> del PDF.<br>
+          ✔ Ocupa el <strong>100%</strong> de la hoja carta (215.9 × 279.4 mm).<br>
+          ✔ Queda <strong>detrás</strong> de nombres, asignación y círculos.
+        </p>
+        <button class="btn-rm" onclick="removeImage()">✕ Quitar imagen</button>
+      </div>
+    </div>
+    <div id="imgBadge">
+      <span class="badge-no">⬜ Sin imagen de fondo — el PDF tendrá fondo en blanco</span>
+    </div>
+  </div>
+
+  <!-- ③ VISTA PREVIA -->
+  <div class="card" id="prevCard" style="display:none">
+    <div class="card-title"><span class="step-num">3</span>Vista Previa de Datos</div>
+    <div class="stats" id="statRow"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Nombres</th><th>1er Apellido</th>
+            <th>2do Apellido</th><th>Asignación</th><th>Grupo</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ④ GENERAR -->
+  <div class="card">
+    <div class="card-title"><span class="step-num">4</span>Generar PDF</div>
+    <div class="controls">
+      <button class="btn btn-accent" id="btnP" disabled onclick="run('print')">
+        🖨 Generar e Imprimir
+      </button>
+      <button class="btn btn-ghost" id="btnD" disabled onclick="run('download')">
+        ⬇ Descargar PDF
+      </button>
+      <div class="status s-info" id="statusEl">Carga un archivo CSV para comenzar.</div>
+    </div>
+    <div class="prog-wrap" id="progWrap"><div class="prog-bar" id="progBar"></div></div>
+    <p class="prog-lbl" id="progLbl"></p>
+    <p class="note">
+      ⚠ Imprimir con escala <strong>100%</strong>, sin ajuste de márgenes, papel <strong>Carta</strong>.<br>
+      Si se cargó imagen de fondo, aparecerá detrás de los datos en <strong>todas</strong> las páginas.
+    </p>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  COORDENADAS — calibradas con PyMuPDF + análisis pixel hoja ZipGrade
+//  Página carta: 215.90 × 279.40 mm
+// ════════════════════════════════════════════════════════════════
+const CAL = {
+  nombres:         { x: 50.774,  y: 24.194, maxW: 57.0, fs: 12 },
+  primerApellido:  { x: 109.651, y: 24.194, maxW: 43.0, fs: 12 },
+  segundoApellido: { x: 154.808, y: 24.194, maxW: 43.0, fs: 12 },
+  asigCentersX: [47.865, 53.713, 59.660, 65.770, 71.316, 77.153, 83.044, 88.836, 94.682],
+  asigTextY:    38.136,
+  asigFS:       10,
+  grupoX:       107.198,
+  grupoTextY:   37.981,
+  grupoFS:      10,
+  digitRowsY:   [42.5, 49, 55.5, 62.3, 68.5, 75.5, 82, 88.5, 95.3, 102],
+  digitCircleR: 2.37,
+  grupoCircleX: 108.009,
+  grupoLetters: 'ABCDEFGHIJ',
+};
+
+const PAGE_W = 215.9;
+const PAGE_H = 279.4;
+
+let csvData   = [];
+let pdfBlob   = null;
+let bgDataUrl = null;
+let bgFmt     = null;
+
+// ════════════════════════════════════════════════════════════════
+//  CODE-128C
+// ════════════════════════════════════════════════════════════════
+const C128_TABLE = [
+  [2,1,2,2,2,2],[2,2,2,1,2,2],[2,2,2,2,2,1],[1,2,1,2,2,3],[1,2,1,3,2,2],[1,3,1,2,2,2],
+  [1,2,2,2,1,3],[1,2,2,3,1,2],[1,3,2,2,1,2],[2,2,1,2,1,3],[2,2,1,3,1,2],[2,3,1,2,1,2],
+  [1,1,2,2,3,2],[1,2,2,1,3,2],[1,2,2,2,3,1],[1,1,3,2,2,2],[1,2,3,1,2,2],[1,2,3,2,2,1],
+  [2,2,3,2,1,1],[2,2,1,1,3,2],[2,2,1,2,3,1],[2,1,3,2,1,2],[2,2,3,1,1,2],[3,1,2,1,3,1],
+  [3,1,1,2,2,2],[3,2,1,1,2,2],[3,2,1,2,2,1],[3,1,2,2,1,2],[3,2,2,1,1,2],[3,2,2,2,1,1],
+  [2,1,2,1,2,3],[2,1,2,3,2,1],[2,3,2,1,2,1],[1,1,1,3,2,3],[1,3,1,1,2,3],[1,3,1,3,2,1],
+  [1,1,2,3,1,3],[1,3,2,1,1,3],[1,3,2,3,1,1],[2,1,1,3,1,3],[2,3,1,1,1,3],[2,3,1,3,1,1],
+  [1,1,2,1,3,3],[1,1,2,3,3,1],[1,3,2,1,3,1],[1,1,3,1,2,3],[1,1,3,3,2,1],[1,3,3,1,2,1],
+  [3,1,3,1,2,1],[2,1,1,3,3,1],[2,3,1,1,3,1],[2,1,3,1,1,3],[2,1,3,3,1,1],[2,1,3,1,3,1],
+  [3,1,1,1,2,3],[3,1,1,3,2,1],[3,3,1,1,2,1],[3,1,2,1,1,3],[3,1,2,3,1,1],[3,3,2,1,1,1],
+  [3,1,4,1,1,1],[2,2,1,4,1,1],[4,3,1,1,1,1],[1,1,1,2,2,4],[1,1,1,4,2,2],[1,2,1,1,2,4],
+  [1,2,1,4,2,1],[1,4,1,1,2,2],[1,4,1,2,2,1],[1,1,2,2,1,4],[1,1,2,4,1,2],[1,2,2,1,1,4],
+  [1,2,2,4,1,1],[1,4,2,1,1,2],[1,4,2,2,1,1],[2,4,1,2,1,1],[2,2,1,1,1,4],[4,1,3,1,1,1],
+  [2,4,1,1,1,2],[1,3,4,1,1,1],[1,1,1,2,4,2],[1,2,1,1,4,2],[1,2,1,2,4,1],[1,1,4,2,1,2],
+  [1,2,4,1,1,2],[1,2,4,2,1,1],[4,1,1,2,1,2],[4,2,1,1,1,2],[4,2,1,2,1,1],[2,1,2,1,4,1],
+  [2,1,4,1,2,1],[4,1,2,1,2,1],[1,1,1,1,4,3],[1,1,1,3,4,1],[1,3,1,1,4,1],[1,1,4,1,1,3],
+  [1,1,4,3,1,1],[4,1,1,1,1,3],[4,1,1,3,1,1],[1,1,3,1,4,1],[1,1,4,1,3,1],[3,1,1,1,4,1],
+  [4,1,1,1,3,1],[2,1,1,4,1,2],[2,1,1,2,1,4],[2,1,1,2,3,2]
+];
+const C128_STOP    = [2,3,3,1,1,1,2];
+const C128_START_C = 105;
+
+function buildBarcode128C(id9) {
+  const digits = ('0' + id9.replace(/\D/g, '').slice(0, 9)).slice(-10);
+  const symbols = [];
+  for (let i = 0; i < digits.length; i += 2) symbols.push(parseInt(digits.slice(i, i + 2), 10));
+  let checksum = C128_START_C;
+  for (let i = 0; i < symbols.length; i++) checksum += symbols[i] * (i + 1);
+  const check = checksum % 103;
+  return [...C128_TABLE[C128_START_C], ...symbols.flatMap(v => C128_TABLE[v]), ...C128_TABLE[check], ...C128_STOP];
+}
+
+function drawBarcode(doc, id9) {
+  if (!id9 || id9.trim().length === 0) return;
+  const modules = buildBarcode128C(id9);
+  const mw = 0.8, bh = 8, quiet = 10 * mw;
+  const barsW  = modules.reduce((acc, m) => acc + m * mw, 0);
+  const totalW = barsW + quiet * 2;
+  const x0 = (PAGE_W - totalW) / 2 + quiet;
+  const y0 = PAGE_H - bh - 4;
+  doc.setFillColor(255, 255, 255);
+  doc.rect((PAGE_W - totalW) / 2, y0 - 1, totalW, bh + 2, 'F');
+  doc.setFillColor(0, 0, 0);
+  let x = x0;
+  modules.forEach((w, i) => {
+    if (i % 2 === 0) doc.rect(x, y0, w * mw, bh, 'F');
+    x += w * mw;
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+//  CSV — DRAG & DROP / SELECT
+// ════════════════════════════════════════════════════════════════
+const dz = document.getElementById('dz');
+document.getElementById('csvIn').addEventListener('change', e => { const f = e.target.files[0]; if (f) readCSV(f); });
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.toLowerCase().endsWith('.csv')) readCSV(f);
+  else setStatus('Solo archivos .csv', 'err');
+});
+
+function readCSV(file) {
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      csvData = parseCSV(ev.target.result);
+      if (!csvData.length) throw new Error('Sin registros válidos.');
+      renderTable();
+      pdfBlob = null;
+      document.getElementById('btnP').disabled = false;
+      document.getElementById('btnD').disabled = false;
+      setStatus(`✓ ${csvData.length} alumno(s) cargados.`, 'ok');
+    } catch(e) { setStatus('Error: ' + e.message, 'err'); }
+  };
+  r.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(raw) {
+  raw = raw.replace(/^\uFEFF/, '');
+  const lines = raw.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) throw new Error('Encabezado + al menos un registro requeridos.');
+  const headers = parseLine(lines[0]).map(h => h.trim().toUpperCase().replace(/\s+/g,'_'));
+  const req = ['NOMBRES','PRIMER_APELLIDO','SEGUNDO_APELLIDO','ASIGNACION','GRUPO'];
+  const miss = req.filter(r => !headers.includes(r));
+  if (miss.length) throw new Error(`Columnas faltantes: ${miss.join(', ')}`);
+  return lines.slice(1).map(line => {
+    const vals = parseLine(line);
+    const row = {};
+    headers.forEach((h,i) => { row[h] = (vals[i]||'').trim(); });
+    if (row.GRUPO)      row.GRUPO = row.GRUPO[0].toUpperCase();
+    if (row.ASIGNACION) row.ASIGNACION = row.ASIGNACION.replace(/\D/g,'').slice(0,9);
+    return row;
+  }).filter(r => r.NOMBRES || r.PRIMER_APELLIDO);
+}
+
+function parseLine(line) {
+  const res=[]; let cur='', inQ=false;
+  for(const ch of line){
+    if(ch==='"'){inQ=!inQ;continue;}
+    if(ch===','&&!inQ){res.push(cur);cur='';continue;}
+    cur+=ch;
+  }
+  res.push(cur); return res;
+}
+
+function renderTable() {
+  document.getElementById('prevCard').style.display = 'block';
+  const gs = [...new Set(csvData.map(d=>d.GRUPO).filter(Boolean))].sort().join(' ');
+  document.getElementById('statRow').innerHTML = `
+    <div class="stat"><span class="stat-v">${csvData.length}</span><span class="stat-l">Alumnos</span></div>
+    <div class="stat"><span class="stat-v">${gs||'—'}</span><span class="stat-l">Grupos</span></div>
+    <div class="stat"><span class="stat-v">${csvData.length}</span><span class="stat-l">Páginas PDF</span></div>`;
+  document.getElementById('tBody').innerHTML = csvData.map((r,i) => `
+    <tr>
+      <td>${i+1}</td><td>${r.NOMBRES||'—'}</td><td>${r.PRIMER_APELLIDO||'—'}</td>
+      <td>${r.SEGUNDO_APELLIDO||'—'}</td>
+      <td><span class="tag">${r.ASIGNACION||'—'}</span></td>
+      <td><span class="tag">${r.GRUPO||'—'}</span></td>
+    </tr>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════════
+//  IMAGEN DE FONDO
+// ════════════════════════════════════════════════════════════════
+const imgDz = document.getElementById('imgDz');
+document.getElementById('imgIn').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadBgImage(f); });
+imgDz.addEventListener('dragover', e => { e.preventDefault(); imgDz.classList.add('over'); });
+imgDz.addEventListener('dragleave', () => imgDz.classList.remove('over'));
+imgDz.addEventListener('drop', e => {
+  e.preventDefault(); imgDz.classList.remove('over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) loadBgImage(f);
+  else alert('Selecciona una imagen: PNG, JPG o WEBP.');
+});
+
+function loadBgImage(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const rawUrl = ev.target.result;
+    const mime   = file.type.toLowerCase();
+    if (mime.includes('png')) {
+      bgFmt = 'PNG'; bgDataUrl = rawUrl; finalizeBg(file, rawUrl);
+    } else if (mime.includes('jpeg') || mime.includes('jpg')) {
+      bgFmt = 'JPEG'; bgDataUrl = rawUrl; finalizeBg(file, rawUrl);
+    } else {
+      bgFmt = 'JPEG';
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        bgDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        finalizeBg(file, rawUrl);
+      };
+      img.src = rawUrl;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function finalizeBg(file, previewUrl) {
+  document.getElementById('imgThumb').src = previewUrl;
+  document.getElementById('imgName').textContent = file.name;
+  document.getElementById('imgSize').textContent = fmtBytes(file.size);
+  document.getElementById('imgFmt').textContent  = bgFmt;
+  const tmp = new Image();
+  tmp.onload = () => { document.getElementById('imgDims').textContent = `${tmp.naturalWidth} × ${tmp.naturalHeight} px`; };
+  tmp.src = previewUrl;
+  imgDz.style.display = 'none';
+  document.getElementById('imgPrev').classList.add('visible');
+  document.getElementById('imgBadge').innerHTML =
+    `<span class="badge-ok">🖼️ Imagen de fondo activa: <strong style="margin-left:.2rem">${file.name}</strong></span>`;
+  pdfBlob = null;
+}
+
+function removeImage() {
+  bgDataUrl = null; bgFmt = null;
+  document.getElementById('imgIn').value = '';
+  document.getElementById('imgThumb').src = '';
+  imgDz.style.display = '';
+  document.getElementById('imgPrev').classList.remove('visible');
+  document.getElementById('imgBadge').innerHTML =
+    `<span class="badge-no">⬜ Sin imagen de fondo — el PDF tendrá fondo en blanco</span>`;
+  pdfBlob = null;
+}
+
+function fmtBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+  return (b/(1024*1024)).toFixed(2) + ' MB';
+}
+
+// ════════════════════════════════════════════════════════════════
+//  GENERADOR PDF
+// ════════════════════════════════════════════════════════════════
+async function run(mode) {
+  if (!csvData.length) return;
+  const bP = document.getElementById('btnP'), bD = document.getElementById('btnD');
+  bP.disabled = true; bD.disabled = true;
+  document.getElementById('progWrap').style.display = 'block';
+  setStatus('Generando PDF...', 'info');
+  try {
+    const {jsPDF} = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'letter', putOnlyUsedFonts:true, compress:false });
+    for (let i = 0; i < csvData.length; i++) {
+      if (i > 0) doc.addPage();
+      drawPage(doc, csvData[i]);
+      document.getElementById('progBar').style.width = Math.round((i+1)/csvData.length*100) + '%';
+      document.getElementById('progLbl').textContent = `Procesando ${i+1} de ${csvData.length}...`;
+      await tick();
+    }
+    pdfBlob = doc.output('blob');
+    document.getElementById('progLbl').textContent = `✓ ${csvData.length} hoja(s) listas.`;
+    setStatus(`✓ PDF listo — ${csvData.length} página(s).`, 'ok');
+    const url = URL.createObjectURL(pdfBlob);
+    if (mode === 'print') {
+      const w = window.open(url, '_blank');
+      if (!w) alert('Permite ventanas emergentes para abrir el PDF.');
+    } else {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ZipGrade_${csvData.length}_alumnos.pdf`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+  } catch(e) {
+    setStatus('Error: ' + e.message, 'err');
+    console.error(e);
+  }
+  bP.disabled = false; bD.disabled = false;
+}
+
+const tick = () => new Promise(r => setTimeout(r, 0));
+
+function drawPage(doc, row) {
+  const C = CAL;
+  if (bgDataUrl) doc.addImage(bgDataUrl, bgFmt, 0, 0, PAGE_W, PAGE_H);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 0, 0);
+  const nombres = fixText(row.NOMBRES || '');
+  const ap1     = fixText(row.PRIMER_APELLIDO || '');
+  const ap2     = fixText(row.SEGUNDO_APELLIDO || '');
+  const asig    = (row.ASIGNACION || '').padEnd(9, '');
+  const grupo   = ((row.GRUPO || '')[0] || '').toUpperCase();
+  doc.setFontSize(autoFS(doc, nombres, C.nombres.maxW, C.nombres.fs));
+  doc.text(nombres, C.nombres.x, C.nombres.y);
+  doc.setFontSize(autoFS(doc, ap1, C.primerApellido.maxW, C.primerApellido.fs));
+  doc.text(ap1, C.primerApellido.x, C.primerApellido.y);
+  doc.setFontSize(autoFS(doc, ap2, C.segundoApellido.maxW, C.segundoApellido.fs));
+  doc.text(ap2, C.segundoApellido.x, C.segundoApellido.y);
+  doc.setFontSize(C.asigFS);
+  for (let d = 0; d < 9; d++) {
+    const digit = asig[d] || '';
+    if (digit.trim()) doc.text(digit, C.asigCentersX[d], C.asigTextY, { align: 'center' });
+  }
+  doc.setFontSize(C.grupoFS);
+  if (grupo) doc.text(grupo, C.grupoX, C.grupoTextY, { align: 'center' });
+  doc.setFillColor(0, 0, 0);
+  for (let col = 0; col < 9; col++) {
+    const d = parseInt(asig[col]);
+    if (isNaN(d)) continue;
+    doc.circle(C.asigCentersX[col], C.digitRowsY[d], C.digitCircleR, 'F');
+  }
+  const docId = (row.ASIGNACION || '').replace(/\D/g, '').slice(0, 9).padStart(9, '0');
+  if (docId.replace(/^0+/, '').length > 0) drawBarcode(doc, docId);
+}
+
+function fixText(s) { return s ? s.trim().normalize('NFC') : ''; }
+function autoFS(doc, text, maxW, baseFS) {
+  if (!text) return baseFS;
+  let fs = baseFS; doc.setFontSize(fs);
+  while (fs > 5 && doc.getTextWidth(text) > maxW) { fs -= 0.3; doc.setFontSize(fs); }
+  return fs;
+}
+function setStatus(msg, type) {
+  const el = document.getElementById('statusEl');
+  el.textContent = msg;
+  el.className = 'status ' + { ok:'s-ok', err:'s-err', info:'s-info' }[type];
+}
+</script>
+</body>
+</html>
