@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Generador CSV — Suite ZipGrade</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -101,6 +103,9 @@ header{
 .btn-primary{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600;}
 .btn-primary:hover{background:var(--accent-hi);border-color:var(--accent-hi);}
 .btn-primary:active{transform:scale(.97);}
+.btn-pdf{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.35);color:#fca5a5;font-weight:600;}
+.btn-pdf:hover{background:rgba(248,113,113,.22);border-color:rgba(248,113,113,.55);color:#fecaca;}
+.btn-pdf:active{transform:scale(.97);}
 
 /* ── PASTE HINT ── */
 .paste-hint{
@@ -339,8 +344,51 @@ footer{
   font-family:'DM Mono',monospace;margin-left:6px;vertical-align:middle;
 }
 
-/* Modal footer */
-.modal-footer{
+/* ── PDF MODAL ── */
+.pdf-modal-bg{
+  display:none;position:fixed;inset:0;z-index:700;
+  background:rgba(4,5,8,.92);backdrop-filter:blur(10px);
+  align-items:flex-start;justify-content:center;padding-top:40px;
+}
+.pdf-modal-bg.active{display:flex;}
+.pdf-modal{
+  background:var(--surface);border:1px solid var(--border2);
+  border-radius:14px;width:min(560px,96vw);max-height:calc(100vh - 80px);
+  display:flex;flex-direction:column;animation:popIn .2s cubic-bezier(.34,1.56,.64,1);
+  overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);
+}
+.pdf-modal-header{
+  padding:18px 22px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.pdf-modal-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.pdf-modal-title svg{width:16px;height:16px;fill:none;stroke:#fca5a5;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.pdf-modal-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.pdf-modal-body{padding:20px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:18px;}
+.pdf-field-group{display:flex;flex-direction:column;gap:6px;}
+.pdf-field-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;}
+.pdf-field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.pdf-input{
+  width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--radius-md);color:var(--text);font-family:'Sora',sans-serif;font-size:13px;
+  outline:none;transition:border-color .12s;
+}
+.pdf-input:focus{border-color:rgba(248,113,113,.5);box-shadow:0 0 0 2px rgba(248,113,113,.1);}
+.pdf-input::placeholder{color:var(--muted);font-size:12px;}
+.pdf-preview-info{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-md);
+  padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);
+}
+.pdf-preview-info svg{width:14px;height:14px;fill:none;stroke:#fca5a5;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.pdf-preview-info strong{color:var(--accent);}
+.pdf-modal-footer{
+  padding:14px 22px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;
+}
+.btn-pdf-gen{background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.4);color:#fca5a5;font-weight:600;padding:8px 18px;}
+.btn-pdf-gen:hover{background:rgba(248,113,113,.28);color:#fecaca;}
+.btn-pdf-gen svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
   padding:12px 20px;border-top:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;gap:12px;
 }
@@ -384,6 +432,10 @@ footer{
     <button class="btn btn-primary" onclick="exportCSV()">
       <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Descargar CSV
+    </button>
+    <button class="btn btn-pdf" onclick="openPdfModal()">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Lista PDF
     </button>
   </div>
 </div>
@@ -498,6 +550,59 @@ footer{
           Confirmar pegado
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- PDF MODAL -->
+<div class="pdf-modal-bg" id="pdf-modal">
+  <div class="pdf-modal">
+    <div class="pdf-modal-header">
+      <div>
+        <div class="pdf-modal-title">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Generar Lista de Asistencia PDF
+        </div>
+        <div class="pdf-modal-sub">Configura los datos del encabezado antes de generar</div>
+      </div>
+      <button class="modal-close" onclick="closePdfModal()">✕</button>
+    </div>
+    <div class="pdf-modal-body">
+
+      <div class="pdf-field-group">
+        <div class="pdf-field-label">Institución / Escuela</div>
+        <input class="pdf-input" id="pdf-escuela" placeholder="Ej: CONALEP Tamaulipas" />
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field-label">Datos del Grupo</div>
+        <div class="pdf-field-row">
+          <input class="pdf-input" id="pdf-materia" placeholder="Materia / Asignatura" />
+          <input class="pdf-input" id="pdf-grupo" placeholder="Grupo / Turno" />
+        </div>
+        <div class="pdf-field-row">
+          <input class="pdf-input" id="pdf-docente" placeholder="Nombre del docente" />
+          <input class="pdf-input" id="pdf-periodo" placeholder="Período / Semestre" />
+        </div>
+      </div>
+
+      <div class="pdf-field-group">
+        <div class="pdf-field-label">Fecha del reporte</div>
+        <input class="pdf-input" id="pdf-fecha" type="date" />
+      </div>
+
+      <div class="pdf-preview-info">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>Se generará una lista con <strong id="pdf-count">0</strong> alumno(s) con columnas: <strong>✓ Asistencia</strong>, nombre completo, asignación, grupo y <strong>Observaciones</strong>. Las hojas llevan encabezado, pie de página y numeración.</span>
+      </div>
+
+    </div>
+    <div class="pdf-modal-footer">
+      <button class="btn btn-ghost" onclick="closePdfModal()">Cancelar</button>
+      <button class="btn btn-pdf-gen" onclick="generatePDF()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Generar y Descargar PDF
+      </button>
     </div>
   </div>
 </div>
@@ -944,6 +1049,298 @@ document.getElementById('paste-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
+/* ═══════════════════════════════════════════════
+   PDF MODAL
+═══════════════════════════════════════════════ */
+function openPdfModal() {
+  if (rows.length === 0) { showToast('No hay alumnos capturados.', '⚠'); return; }
+  document.getElementById('pdf-count').textContent = rows.length;
+  // Set today's date
+  var today = new Date();
+  var yyyy = today.getFullYear();
+  var mm = String(today.getMonth()+1).padStart(2,'0');
+  var dd = String(today.getDate()).padStart(2,'0');
+  document.getElementById('pdf-fecha').value = yyyy + '-' + mm + '-' + dd;
+  document.getElementById('pdf-modal').classList.add('active');
+}
+function closePdfModal() {
+  document.getElementById('pdf-modal').classList.remove('active');
+}
+document.getElementById('pdf-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePdfModal();
+});
+
+function generatePDF() {
+  if (rows.length === 0) { showToast('No hay datos para exportar.', '⚠'); return; }
+
+  // ── Leer campos (vacíos si no se capturaron) ──
+  var escuela  = document.getElementById('pdf-escuela').value.trim();
+  var materia  = document.getElementById('pdf-materia').value.trim();
+  var grupo    = document.getElementById('pdf-grupo').value.trim();
+  var docente  = document.getElementById('pdf-docente').value.trim();
+  var periodo  = document.getElementById('pdf-periodo').value.trim();
+  var fechaRaw = document.getElementById('pdf-fecha').value;
+  var fecha    = '';
+  if (fechaRaw) {
+    var fp = fechaRaw.split('-');
+    var meses = ['enero','febrero','marzo','abril','mayo','junio',
+                 'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    fecha = parseInt(fp[2],10) + ' de ' + meses[parseInt(fp[1],10)-1] + ' de ' + fp[0];
+  }
+
+  // ── Verificar librería ──
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    showToast('Error: librería PDF no cargada.', '⚠'); return;
+  }
+  var jsPDF = window.jspdf.jsPDF;
+  var doc   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+
+  // ── Medidas página carta ──
+  var pageW   = doc.internal.pageSize.getWidth();   // 215.9 mm
+  var pageH   = doc.internal.pageSize.getHeight();  // 279.4 mm
+  var mL      = 12, mR = 12;
+  var usableW = pageW - mL - mR;                    // ≈ 191.9 mm
+
+  var hdrH1  = 10;   // franja: institución + pág
+  var hdrH2  = 14;   // franja: título + metadatos
+  var mTop   = hdrH1 + hdrH2 + 4;  // margen superior tabla ≈ 28 mm
+  var mBot   = 14;
+
+
+  // ── Ancho de col # calculado con el número más grande real ──
+  // Se mide el texto del número mayor en la fuente/tamaño reales para garantizar
+  // que 1, 10, 100, 1000... siempre quepan sin recorte.
+  var maxNumStr = String(rows.length);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);                          // mismo fontSize que usará la celda
+  var numTextW = doc.getTextWidth(maxNumStr);  // ancho real en mm
+  var colW0    = numTextW + 5;                 // + 2.5 mm padding cada lado
+  var colW1    = 9;                            // checkbox, fijo
+  var colW3    = usableW * 0.17;              // Asignación
+  var colW4    = usableW * 0.07;              // Grupo
+  var colW5    = usableW * 0.29;              // Observaciones
+  var colW2    = usableW - colW0 - colW1 - colW3 - colW4 - colW5; // Nombre: resta exacta
+
+  var colW = [colW0, colW1, colW2, colW3, colW4, colW5];
+  var columnStyles = {};
+  for (var ci = 0; ci < colW.length; ci++) {
+    columnStyles[ci] = { cellWidth: colW[ci] };
+  }
+
+
+  // ── Función auxiliar: truncar texto para que quepa en un ancho dado ──
+  function fitText(txt, maxW, fontSize, fontStyle) {
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', fontStyle || 'normal');
+    var w = doc.getTextWidth(txt);
+    if (w <= maxW) return txt;
+    // truncar con elipsis
+    var ellipsis = '...';
+    var eW = doc.getTextWidth(ellipsis);
+    while (txt.length > 0 && doc.getTextWidth(txt) + eW > maxW) {
+      txt = txt.slice(0, -1);
+    }
+    return txt + ellipsis;
+  }
+
+  // ── Construir datos de tabla ──
+  var head = [['#', '\u2713', 'Nombre del alumno', 'Asignaci\u00f3n', 'Gpo.', 'Observaciones']];
+  var body = [];
+  for (var i = 0; i < rows.length; i++) {
+    var r      = rows[i];
+    var partes = [r.NOMBRES, r.PRIMER_APELLIDO, r.SEGUNDO_APELLIDO].filter(function(s){ return s && s.trim(); });
+    var nombre = partes.join(' ') || '\u2014';
+    body.push([String(i + 1), '', nombre, r.ASIGNACION || '', r.GRUPO || '', '']);
+  }
+
+  // ── Encabezado y pie de página ──
+  function drawHeaderFooter(pg, tp) {
+    // Fondo blanco explícito en la zona de encabezado
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageW, mTop - 1, 'F');
+
+    // Línea de acento superior
+    doc.setDrawColor(30, 120, 80);
+    doc.setLineWidth(0.8);
+    doc.line(mL, 0.5, pageW - mR, 0.5);
+
+    // Franja 1: Institución (izq) + Pág (der)
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(20, 20, 20);
+    if (escuela) {
+      var escuelaFit = fitText(escuela, pageW - mL - mR - 30, 10, 'bold');
+      doc.text(escuelaFit, mL, 7);
+    }
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(80, 80, 80);
+    doc.text('Pag. ' + pg + ' / ' + tp, pageW - mR, 7, { align: 'right' });
+
+    // Divisor
+    doc.setDrawColor(190, 190, 190);
+    doc.setLineWidth(0.25);
+    doc.line(mL, hdrH1, pageW - mR, hdrH1);
+
+    // Franja 2: Título centrado
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(20, 20, 20);
+    doc.text('LISTA DE ASISTENCIA', pageW / 2, hdrH1 + 5.5, { align: 'center' });
+
+    // Meta izquierda
+    var metaL = [];
+    if (materia) metaL.push('Materia: ' + materia);
+    if (grupo)   metaL.push('Grupo: '   + grupo);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(60, 60, 60);
+    if (metaL.length) doc.text(metaL.join('   |   '), mL, hdrH1 + 11.5);
+
+    // Meta derecha
+    var metaR = [];
+    if (docente) metaR.push('Docente: ' + docente);
+    if (periodo) metaR.push('Periodo: ' + periodo);
+    if (fecha)   metaR.push('Fecha: '   + fecha);
+    if (metaR.length) doc.text(metaR.join('   |   '), pageW - mR, hdrH1 + 11.5, { align: 'right' });
+
+    // Línea verde antes de la tabla
+    doc.setDrawColor(30, 120, 80);
+    doc.setLineWidth(0.4);
+    doc.line(mL, mTop - 1, pageW - mR, mTop - 1);
+
+    // ── PIE DE PÁGINA ──
+    var fy = pageH - mBot + 3;
+    doc.setDrawColor(190, 190, 190);
+    doc.setLineWidth(0.25);
+    doc.line(mL, fy, pageW - mR, fy);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(80, 80, 80);
+    var footL = [];
+    if (escuela) footL.push(escuela);
+    if (periodo) footL.push(periodo);
+    if (footL.length) doc.text(footL.join(' | '), mL, fy + 5);
+    doc.text('Pag. ' + pg + ' de ' + tp, pageW - mR, fy + 5, { align: 'right' });
+    doc.text('Firma del docente: ___________________________', pageW / 2, fy + 5, { align: 'center' });
+  }
+
+  // ── autoTable ──
+  doc.autoTable({
+    head: head,
+    body: body,
+    startY: mTop,
+    margin: { left: mL, right: mR, top: mTop, bottom: mBot + 8 },
+    tableWidth: usableW,
+    styles: {
+      font: 'helvetica',
+      fontSize: 8,
+      cellPadding: { top: 2, right: 2, bottom: 2, left: 2 },
+      valign: 'middle',
+      lineColor: [180, 180, 180],
+      lineWidth: 0.25,
+      textColor: [20, 20, 20],
+      fillColor: [255, 255, 255],
+      minCellHeight: 9,
+      overflow: 'hidden'   // evita expansión de fila por texto largo
+    },
+    headStyles: {
+      fillColor: [235, 245, 240],
+      textColor: [20, 80, 50],
+      fontStyle: 'bold',
+      fontSize: 7.5,
+      halign: 'center',
+      lineColor: [30, 120, 80],
+      lineWidth: { bottom: 0.5, top: 0.3, left: 0.25, right: 0.25 }
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 249]
+    },
+    columnStyles: columnStyles,
+    didParseCell: function(data) {
+      if (data.section === 'head') {
+        // encabezados de col 0 y 1 también centrados
+        data.cell.styles.halign = 'center';
+      }
+      if (data.section === 'body') {
+        // # — centrado, gris claro
+        if (data.column.index === 0) {
+          data.cell.styles.halign   = 'center';
+          data.cell.styles.valign   = 'middle';
+          data.cell.styles.textColor = [130, 130, 130];
+          data.cell.styles.fontSize = 7;
+          data.cell.styles.overflow = 'hidden';
+        }
+        // ✓ — centrado (el cuadro se dibuja en didDrawCell)
+        if (data.column.index === 1) {
+          data.cell.styles.halign = 'center';
+          data.cell.styles.valign = 'middle';
+          data.cell.text = [''];  // limpiar texto; el checkbox se dibuja manualmente
+        }
+        // Nombre — izquierda, overflow hidden (no expande fila)
+        if (data.column.index === 2) {
+          data.cell.styles.halign   = 'left';
+          data.cell.styles.valign   = 'middle';
+          data.cell.styles.overflow = 'hidden';
+          data.cell.styles.fontSize = 8;
+        }
+        // Asignación — centrado
+        if (data.column.index === 3) {
+          data.cell.styles.halign   = 'center';
+          data.cell.styles.valign   = 'middle';
+          data.cell.styles.fontSize = 7.5;
+          data.cell.styles.overflow = 'hidden';
+        }
+        // Grupo — centrado
+        if (data.column.index === 4) {
+          data.cell.styles.halign   = 'center';
+          data.cell.styles.valign   = 'middle';
+          data.cell.styles.fontSize = 7.5;
+        }
+        // Observaciones — gris, sin texto
+        if (data.column.index === 5) {
+          data.cell.styles.textColor = [200, 200, 200];
+          data.cell.styles.overflow  = 'hidden';
+        }
+      }
+    },
+    didDrawCell: function(data) {
+      // Dibujar checkbox en col 1 filas de datos
+      if (data.section === 'body' && data.column.index === 1) {
+        var boxSize = 4.5;
+        var bx = data.cell.x + (data.cell.width  - boxSize) / 2;
+        var by = data.cell.y + (data.cell.height - boxSize) / 2;
+        doc.setDrawColor(30, 120, 80);
+        doc.setLineWidth(0.45);
+        doc.roundedRect(bx, by, boxSize, boxSize, 0.6, 0.6, 'S');
+      }
+      // Línea de escritura en Observaciones
+      if (data.section === 'body' && data.column.index === 5) {
+        var lY = data.cell.y + data.cell.height - 1.8;
+        doc.setDrawColor(190, 190, 190);
+        doc.setLineWidth(0.2);
+        doc.line(data.cell.x + 1.5, lY, data.cell.x + data.cell.width - 1.5, lY);
+      }
+    },
+    didDrawPage: function() { /* no hacer nada aquí para evitar bucles */ }
+  });
+
+  // ── Dibujar encabezado/pie en TODAS las páginas una vez conocido el total ──
+  var totalPages = doc.internal.getNumberOfPages();
+  for (var p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    drawHeaderFooter(p, totalPages);
+  }
+
+  // ── Guardar ──
+  var safeName = 'Lista_Asistencia' +
+    (grupo ? '_' + grupo.replace(/[^a-zA-Z0-9]/g, '') : '') +
+    (fechaRaw ? '_' + fechaRaw : '') + '.pdf';
+  doc.save(safeName);
+  closePdfModal();
+  showToast('PDF listo — ' + rows.length + ' alumno(s), ' + totalPages + ' hoja(s).', '\uD83D\uDCC4');
+}
 /* INIT */
 addRow();
 </script>
