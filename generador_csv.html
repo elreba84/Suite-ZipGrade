@@ -1104,7 +1104,7 @@ function generatePDF() {
   var hdrH1  = 10;   // franja: institución + pág
   var hdrH2  = 14;   // franja: título + metadatos
   var mTop   = hdrH1 + hdrH2 + 4;  // margen superior tabla ≈ 28 mm
-  var mBot   = 14;
+  var mBot   = 20;
 
 
   // ── Ancho de col # calculado con el número más grande real ──
@@ -1210,7 +1210,8 @@ function generatePDF() {
     doc.line(mL, mTop - 1, pageW - mR, mTop - 1);
 
     // ── PIE DE PÁGINA ──
-    var fy = pageH - mBot + 3;
+    // fy apunta a la línea separadora; 2 filas de texto debajo con 4.5 mm de separación
+    var fy = pageH - mBot + 1;
     doc.setDrawColor(190, 190, 190);
     doc.setLineWidth(0.25);
     doc.line(mL, fy, pageW - mR, fy);
@@ -1218,12 +1219,26 @@ function generatePDF() {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(80, 80, 80);
+
+    // Fila 1: firma centrada
+    doc.text('Firma del docente: ___________________________', pageW / 2, fy + 4.5, { align: 'center' });
+
+    // Fila 2: institución+periodo (izq) | número de página (der)
     var footL = [];
     if (escuela) footL.push(escuela);
     if (periodo) footL.push(periodo);
-    if (footL.length) doc.text(footL.join(' | '), mL, fy + 5);
-    doc.text('Pag. ' + pg + ' de ' + tp, pageW - mR, fy + 5, { align: 'right' });
-    doc.text('Firma del docente: ___________________________', pageW / 2, fy + 5, { align: 'center' });
+    if (footL.length) {
+      // truncar si es demasiado largo para no invadir el número de página
+      doc.setFontSize(6.5);
+      var footTxt = footL.join(' | ');
+      var maxFootW = (pageW - mL - mR) * 0.65;
+      while (footTxt.length > 1 && doc.getTextWidth(footTxt) > maxFootW) {
+        footTxt = footTxt.slice(0, -1);
+      }
+      doc.text(footTxt, mL, fy + 9);
+    }
+    doc.setFontSize(7);
+    doc.text('Pag. ' + pg + ' de ' + tp, pageW - mR, fy + 9, { align: 'right' });
   }
 
   // ── autoTable ──
@@ -1231,18 +1246,18 @@ function generatePDF() {
     head: head,
     body: body,
     startY: mTop,
-    margin: { left: mL, right: mR, top: mTop, bottom: mBot + 8 },
+    margin: { left: mL, right: mR, top: mTop, bottom: mBot + 2 },
     tableWidth: usableW,
     styles: {
       font: 'helvetica',
       fontSize: 8,
-      cellPadding: { top: 2, right: 2, bottom: 2, left: 2 },
+      cellPadding: { top: 1.2, right: 2, bottom: 1.2, left: 2 },
       valign: 'middle',
       lineColor: [180, 180, 180],
       lineWidth: 0.25,
       textColor: [20, 20, 20],
       fillColor: [255, 255, 255],
-      minCellHeight: 9,
+      minCellHeight: 6,
       overflow: 'hidden'   // evita expansión de fila por texto largo
     },
     headStyles: {
